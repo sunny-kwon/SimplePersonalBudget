@@ -11,7 +11,7 @@ import { ArrowLeft } from 'lucide-react';
 export default async function TransactionsPage({
     searchParams,
 }: {
-    searchParams: { startDate?: string; endDate?: string; categoryId?: string };
+    searchParams: Promise<{ startDate?: string; endDate?: string; categoryId?: string }>;
 }) {
     const cookieStore = await cookies();
     const supabase = await createClient(cookieStore);

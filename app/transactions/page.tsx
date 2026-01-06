@@ -12,7 +12,7 @@ import { ArrowLeft, Download } from 'lucide-react';
 export default async function TransactionsPage({
     searchParams,
 }: {
-    searchParams: { startDate?: string; endDate?: string; categoryId?: string; search?: string };
+    searchParams: Promise<{ startDate?: string; endDate?: string; categoryId?: string; search?: string }>;
 }) {
     const cookieStore = await cookies();
     const supabase = await createClient(cookieStore);
