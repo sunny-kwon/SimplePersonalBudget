@@ -33,18 +33,22 @@ export async function POST(request: Request) {
 
     try {
         const body = await request.json();
-        const { name, type, color, icon } = body;
+        const { name, type, icon, sectionId } = body;
 
-        if (!name || !type) {
-            return new NextResponse('Missing required fields', { status: 400 });
+        // Validate required fields
+        if (!name || typeof name !== 'string' || name.trim().length === 0) {
+            return new NextResponse('Name is required', { status: 400 });
+        }
+        if (!type || !['income', 'expense', 'both'].includes(type)) {
+            return new NextResponse('Invalid type', { status: 400 });
         }
 
         const [newCategory] = await db.insert(category).values({
             userId: user.id,
-            name,
+            name: name.trim(),
             type,
-            color,
-            icon,
+            icon: icon || null,
+            sectionId: sectionId || null,
         }).returning();
 
         return NextResponse.json(newCategory);

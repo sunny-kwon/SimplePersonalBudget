@@ -4,6 +4,7 @@ import { transaction } from '@/lib/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import { revalidateTag, revalidatePath } from 'next/cache';
 
 export async function GET(request: Request) {
     const cookieStore = await cookies();
@@ -73,6 +74,8 @@ export async function POST(request: Request) {
             categoryId: categoryId || null,
             note: note || null,
         }).returning();
+
+        revalidatePath('/');
 
         return NextResponse.json(newTransaction);
     } catch (error) {

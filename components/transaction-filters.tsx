@@ -56,7 +56,7 @@ export function TransactionFilters({ categories }: TransactionFiltersProps) {
                         type="date"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 bg-white"
                     />
                 </div>
 
@@ -66,7 +66,7 @@ export function TransactionFilters({ categories }: TransactionFiltersProps) {
                         type="date"
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 bg-white"
                     />
                 </div>
 
@@ -75,11 +75,11 @@ export function TransactionFilters({ categories }: TransactionFiltersProps) {
                     <select
                         value={categoryId}
                         onChange={(e) => setCategoryId(e.target.value)}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900"
                     >
-                        <option value="">All Categories</option>
+                        <option value="" className="text-gray-900">All Categories</option>
                         {categories.map((cat) => (
-                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                            <option key={cat.id} value={cat.id} className="text-gray-900">{cat.name}</option>
                         ))}
                     </select>
                 </div>
@@ -93,7 +93,7 @@ export function TransactionFilters({ categories }: TransactionFiltersProps) {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Note or amount..."
-                            className="w-full border border-gray-300 rounded-md pl-10 pr-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            className="w-full border border-gray-300 rounded-md pl-10 pr-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 bg-white"
                         />
                     </div>
                 </div>

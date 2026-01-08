@@ -14,7 +14,9 @@ interface Transaction {
     category: {
         id: string;
         name: string;
-        color: string | null;
+        section: {
+            color: string;
+        } | null;
     } | null;
 }
 
@@ -141,7 +143,7 @@ export function TransactionTable({ transactions, categories }: TransactionTableP
                                                 type="date"
                                                 value={editForm.occurredOn}
                                                 onChange={(e) => setEditForm({ ...editForm, occurredOn: e.target.value })}
-                                                className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 bg-white"
                                             />
                                         ) : (
                                             new Date(tx.occurredOn + 'T00:00:00').toLocaleDateString('en-US', {
@@ -167,10 +169,10 @@ export function TransactionTable({ transactions, categories }: TransactionTableP
                                             </select>
                                         ) : (
                                             <span className="inline-flex items-center">
-                                                {tx.category?.color && (
+                                                {tx.category?.section?.color && (
                                                     <span
                                                         className="w-3 h-3 rounded-full mr-2 ring-1 ring-gray-200"
-                                                        style={{ backgroundColor: tx.category.color }}
+                                                        style={{ backgroundColor: tx.category.section.color }}
                                                     />
                                                 )}
                                                 <span className="font-medium text-gray-900">
@@ -185,7 +187,7 @@ export function TransactionTable({ transactions, categories }: TransactionTableP
                                                 type="text"
                                                 value={editForm.note}
                                                 onChange={(e) => setEditForm({ ...editForm, note: e.target.value })}
-                                                className="border border-gray-300 rounded-md px-3 py-1.5 text-sm w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                className="border border-gray-300 rounded-md px-3 py-1.5 text-sm w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 bg-white"
                                                 placeholder="Add a note..."
                                             />
                                         ) : (
@@ -201,7 +203,7 @@ export function TransactionTable({ transactions, categories }: TransactionTableP
                                                 step="0.01"
                                                 value={editForm.amount}
                                                 onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })}
-                                                className="border border-gray-300 rounded-md px-3 py-1.5 text-sm w-28 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                className="border border-gray-300 rounded-md px-3 py-1.5 text-sm w-28 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 bg-white"
                                             />
                                         ) : (
                                             <span className={tx.kind === 'income' ? 'text-green-600' : 'text-red-600'}>

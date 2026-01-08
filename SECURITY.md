@@ -22,6 +22,7 @@ ALTER TABLE category ENABLE ROW LEVEL SECURITY;
 ALTER TABLE transaction ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tag ENABLE ROW LEVEL SECURITY;
 ALTER TABLE transaction_tag ENABLE ROW LEVEL SECURITY;
+ALTER TABLE section ENABLE ROW LEVEL SECURITY;
 ```
 
 ---
@@ -142,18 +143,51 @@ CREATE POLICY "Users can delete own transaction tags"
 
 ---
 
-## Verification
-
-Run this query to verify all policies are active:
+## Step 7: Section Policies (NEW)
 
 ```sql
-SELECT schemaname, tablename, policyname 
-FROM pg_policies 
-WHERE schemaname = 'public'
-ORDER BY tablename, policyname;
+CREATE POLICY "Users can view own sections"
+  ON section FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own sections"
+  ON section FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own sections"
+  ON section FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own sections"
+  ON section FOR DELETE
+  USING (auth.uid() = user_id);
 ```
 
-**Expected output:** ~17 policies across 5 tables
+---
+
+## 🔒 Verification Steps
+
+To ensure RLS is active and correct:
+
+1.  **Check RLS Status:**
+    ```sql
+    SELECT tablename, rowsecurity 
+    FROM pg_tables 
+    WHERE schemaname = 'public';
+    ```
+    *All rows should show `true` for `rowsecurity`.*
+
+2.  **Verify Row Count per User:**
+    Logged in as a user, you should only see your own rows.
+    ```sql
+    -- This should return 0 rows if run in Supabase SQL editor (as it defaults to service_role)
+    -- UNLESS you specifically test with a user session.
+    ```
+
+3.  **Check Policies Applied:**
+    ```sql
+    SELECT * FROM pg_policies;
+    ```
 
 ---
 
@@ -169,7 +203,12 @@ ORDER BY tablename, policyname;
 
 ---
 
-## Troubleshooting
+## 🛠️ Troubleshooting
+
+If you see **"UNRESTRICTED"** in the Supabase Table Editor:
+- It means RLS is either disabled or you have a `PERMISSIVE` policy like `FOR ALL TO public USING (true)`.
+- Make sure to run `ALTER TABLE [name] ENABLE ROW LEVEL SECURITY;`
+- Delete any old testing policies: `DROP POLICY IF EXISTS "public access" ON [table];`
 
 ### "Row violates row-level security policy"
 - ✅ This is correct! RLS is working.

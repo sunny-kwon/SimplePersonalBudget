@@ -22,19 +22,19 @@ export async function PATCH(
 
     try {
         const body = await request.json();
-        const { name, color } = body;
+        const { name, sectionId } = body;
 
         // Validate input
         if (name !== undefined && typeof name !== 'string') {
             return new NextResponse('Invalid name', { status: 400 });
         }
-        if (color !== undefined && typeof color !== 'string') {
-            return new NextResponse('Invalid color', { status: 400 });
+        if (sectionId !== undefined && sectionId !== null && typeof sectionId !== 'string') {
+            return new NextResponse('Invalid sectionId', { status: 400 });
         }
 
-        const updateData: { name?: string; color?: string } = {};
+        const updateData: { name?: string; sectionId?: string | null } = {};
         if (name !== undefined) updateData.name = name.trim();
-        if (color !== undefined) updateData.color = color;
+        if (sectionId !== undefined) updateData.sectionId = sectionId;
 
         const [updated] = await db
             .update(category)

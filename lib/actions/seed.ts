@@ -1,26 +1,52 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { category, userProfile } from '@/lib/db/schema';
+import { category, userProfile, section } from '@/lib/db/schema';
 import { eq, count } from 'drizzle-orm';
 import { User } from '@supabase/supabase-js';
 
+const DEFAULT_SECTIONS = [
+    { name: 'Income', order: '0', color: '#22c55e' },
+    { name: 'Giving', order: '1', color: '#ec4899' },
+    { name: 'Needs', order: '2', color: '#ef4444' },
+    { name: 'Food', order: '3', color: '#f59e0b' },
+    { name: 'Wants', order: '4', color: '#8b5cf6' },
+    { name: 'Savings', order: '5', color: '#3b82f6' },
+    { name: 'Investing', order: '6', color: '#6366f1' },
+] as const;
+
 const DEFAULT_CATEGORIES = [
-    { name: 'Salary', type: 'income' },
-    { name: 'Other Income', type: 'income' },
-    { name: 'Rent', type: 'expense' },
-    { name: 'Groceries', type: 'expense' },
-    { name: 'Transport', type: 'expense' },
-    { name: 'Eating Out', type: 'expense' },
-    { name: 'Utilities', type: 'expense' },
-    { name: 'Tithing', type: 'expense' },
-    { name: 'Advance Campaign', type: 'expense' },
-    { name: 'Other Expense', type: 'expense' },
+    // Income
+    { name: 'Salary', type: 'income' as const, sectionName: 'Income' },
+    { name: 'Interest', type: 'income' as const, sectionName: 'Income' },
+    { name: 'Other Income', type: 'income' as const, sectionName: 'Income' },
+
+    // Giving
+    { name: 'Tithing', type: 'expense' as const, sectionName: 'Giving' },
+    { name: 'Advance Campaign', type: 'expense' as const, sectionName: 'Giving' },
+
+    // Needs
+    { name: 'Rent', type: 'expense' as const, sectionName: 'Needs' },
+    { name: 'Transport', type: 'expense' as const, sectionName: 'Needs' },
+    { name: 'Utilities', type: 'expense' as const, sectionName: 'Needs' },
+
+    // Food
+    { name: 'Groceries', type: 'expense' as const, sectionName: 'Food' },
+    { name: 'Eating Out', type: 'expense' as const, sectionName: 'Food' },
+
+    // Wants
+    { name: 'Date Night', type: 'expense' as const, sectionName: 'Wants' },
+    { name: 'Other Expense', type: 'expense' as const, sectionName: 'Wants' },
+
+    // Savings
+    { name: 'Emergency Fund', type: 'expense' as const, sectionName: 'Savings' },
+
+    // Investing
+    { name: 'Retirement', type: 'expense' as const, sectionName: 'Investing' },
 ] as const;
 
 export async function ensureUserExists(user: User) {
     try {
-        // Check first to avoid "Failed query" errors if onConflictDoNothing has issues with current driver/permissions
         const existing = await db.query.userProfile.findFirst({
             where: eq(userProfile.userId, user.id)
         });
@@ -32,32 +58,64 @@ export async function ensureUserExists(user: User) {
             displayName: user?.email?.split('@')[0] || 'User',
         }).onConflictDoNothing({ target: userProfile.userId });
     } catch (error) {
-        // Log but don't crash - this is non-critical for main app flow
         console.error('Error ensuring user profile:', error instanceof Error ? error.message : error);
     }
 }
 
 export async function seedCategories(userId: string) {
     try {
-        // Check if user has any categories
-        const [existing] = await db.select({ count: count() }).from(category).where(eq(category.userId, userId));
+        // 1. Ensure sections exist
+        const userSections = await db.query.section.findMany({
+            where: eq(section.userId, userId)
+        });
 
-        if (existing && existing.count > 0) {
-            return; // Already seeded
+        let sectionsMap = new Map<string, string>();
+
+        if (userSections.length === 0) {
+            console.log(`Seeding sections for user ${userId}`);
+            const insertedSections = await db.insert(section).values(
+                DEFAULT_SECTIONS.map(s => ({
+                    userId,
+                    name: s.name,
+                    order: s.order,
+                    color: s.color,
+                }))
+            ).returning();
+
+            insertedSections.forEach(s => sectionsMap.set(s.name, s.id));
+        } else {
+            userSections.forEach(s => sectionsMap.set(s.name, s.id));
         }
 
-        console.log(`Seeding categories for user ${userId}`);
+        // 2. Fetch current categories
+        const userCategories = await db.query.category.findMany({
+            where: eq(category.userId, userId)
+        });
 
-        // Insert defaults
-        await db.insert(category).values(
-            DEFAULT_CATEGORIES.map(cat => ({
-                userId,
-                name: cat.name,
-                type: cat.type,
-            }))
-        );
+        if (userCategories.length === 0) {
+            console.log(`Seeding categories for user ${userId}`);
+            await db.insert(category).values(
+                DEFAULT_CATEGORIES.map(cat => ({
+                    userId,
+                    name: cat.name,
+                    type: cat.type,
+                    sectionId: sectionsMap.get(cat.sectionName) || null,
+                }))
+            );
+        } else {
+            // 3. Robust migration logic
+            for (const cat of userCategories) {
+                if (!cat.sectionId) {
+                    const defaultCat = DEFAULT_CATEGORIES.find(d => d.name === cat.name);
+                    const sectionId = defaultCat ? sectionsMap.get(defaultCat.sectionName) : (cat.type === 'income' ? sectionsMap.get('Income') : sectionsMap.get('Wants'));
+
+                    await db.update(category)
+                        .set({ sectionId })
+                        .where(eq(category.id, cat.id));
+                }
+            }
+        }
     } catch (error) {
-        // Log error but do not throw. If DB is down, we want to render the error page in Dashboard, not crash here.
-        console.error('Error seeding categories (DB likely down):', error instanceof Error ? error.message : error);
+        console.error('Error seeding categories/sections:', error instanceof Error ? error.message : error);
     }
 }

@@ -10,21 +10,42 @@ export const userProfile = pgTable('user_profile', {
     dateFormat: text('date_format').default('MM/DD/YYYY').notNull(),
 });
 
+// Sections table
+export const section = pgTable('section', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id').notNull(),
+    name: text('name').notNull(),
+    color: text('color').default('#6366f1').notNull(),
+    order: numeric('order').default('0').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (t) => ({
+    userIdIdx: index('section_user_id_idx').on(t.userId),
+}));
+
+export const sectionRelations = relations(section, ({ many }) => ({
+    categories: many(category),
+}));
+
 // Categories table
 export const category = pgTable('category', {
     id: uuid('id').defaultRandom().primaryKey(),
     userId: uuid('user_id').notNull(), // References auth.users(id)
+    sectionId: uuid('section_id').references(() => section.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
     type: text('type', { enum: ['expense', 'income', 'both'] }).notNull(),
-    color: text('color'),
     icon: text('icon'),
     archived: boolean('archived').default(false).notNull(),
 }, (t) => ({
     unq: unique().on(t.userId, t.name), // Note: name is case sensitive here unless we use a custom SQL type or functional index, Drizzle simplified
     userIdIdx: index('category_user_id_idx').on(t.userId),
+    sectionIdIdx: index('category_section_id_idx').on(t.sectionId),
 }));
 
-export const categoryRelations = relations(category, ({ many }) => ({
+export const categoryRelations = relations(category, ({ one, many }) => ({
+    section: one(section, {
+        fields: [category.sectionId],
+        references: [section.id],
+    }),
     transactions: many(transaction),
 }));
 

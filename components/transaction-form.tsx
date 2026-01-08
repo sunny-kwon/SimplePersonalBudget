@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 
 type Category = {
     id: string;
@@ -15,26 +16,21 @@ export function TransactionForm() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [message, setMessage] = useState<string | null>(null);
+    const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
 
     // Form State
     const [kind, setKind] = useState<'income' | 'expense'>('expense');
     const [amount, setAmount] = useState('');
     const [categoryId, setCategoryId] = useState('');
 
-    // Default to local date YYYY-MM-DD
     const getLocalDate = () => {
         const d = new Date();
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
+        return d.toISOString().split('T')[0];
     };
 
     const [occurredOn, setOccurredOn] = useState(getLocalDate());
     const [note, setNote] = useState('');
 
-    // Load categories
     useEffect(() => {
         const loadCats = async () => {
             try {
@@ -42,38 +38,22 @@ export function TransactionForm() {
                 if (res.ok) {
                     const data = await res.json();
                     setCategories(data);
-                    // Set default category if any match kind
-                    // (Can be improved to find first match after state set)
                 }
             } catch (e) { console.error(e) } finally { setIsLoading(false) }
         };
         loadCats();
     }, []);
 
-    // Filter categories by selected kind
     const validCategories = categories.filter(c => c.type === 'both' || c.type === kind);
 
-    // Auto-select first category when switching kind if current selection is invalid
     useEffect(() => {
         if (validCategories.length > 0) {
-            // Check if current categoryId is in valid list
             const isValid = validCategories.find(c => c.id === categoryId);
-            if (!isValid) {
-                setCategoryId(validCategories[0].id);
-            }
+            if (!isValid) setCategoryId(validCategories[0].id);
         } else {
             setCategoryId('');
         }
-    }, [kind, categories, categoryId, validCategories]);
-    // Actually simpler: just unset categoryId if invalid when kind changes? 
-    // Let's keep it simple: When kind changes, reset categoryId to first valid.
-
-    const handleKindChange = (k: 'income' | 'expense') => {
-        setKind(k);
-        const firstValid = categories.find(c => c.type === 'both' || c.type === k);
-        if (firstValid) setCategoryId(firstValid.id);
-        else setCategoryId('');
-    }
+    }, [kind, categories]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -96,76 +76,97 @@ export function TransactionForm() {
             });
 
             if (res.ok) {
-                setMessage('Transaction added!');
+                setMessage({ text: 'Transaction logged successfully', type: 'success' });
                 setAmount('');
                 setNote('');
-                router.refresh(); // Refresh server components (like Recent Transactions list)
-
-                // Clear message after 3s
+                router.refresh();
                 setTimeout(() => setMessage(null), 3000);
             } else {
-                setMessage('Error saving.');
+                setMessage({ text: 'Failed to save transaction', type: 'error' });
             }
         } catch (error) {
-            console.error('Error submitting', error);
-            setMessage('Failed to submit.');
+            setMessage({ text: 'Connection internal error', type: 'error' });
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    if (isLoading) return <div>Loading...</div>;
+    if (isLoading) return null;
 
     return (
-        <div className="bg-white shadow rounded-lg p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Add</h3>
-
-            {/* Tabs */}
-            <div className="flex border-b border-gray-200 mb-4">
-                <button
-                    className={`flex-1 py-2 text-sm font-medium border-b-2 ${kind === 'expense' ? 'border-red-500 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-                    onClick={() => handleKindChange('expense')}
-                >
-                    Expense
-                </button>
-                <button
-                    className={`flex-1 py-2 text-sm font-medium border-b-2 ${kind === 'income' ? 'border-green-500 text-green-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-                    onClick={() => handleKindChange('income')}
-                >
-                    Income
-                </button>
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white shadow-xl shadow-indigo-50/50 rounded-[40px] p-10 border border-gray-100 overflow-hidden relative"
+        >
+            <div className="flex justify-between items-center mb-10">
+                <div>
+                    <h3 className="text-2xl font-black text-gray-900 tracking-tight">Quick Add</h3>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Manual Entry</p>
+                </div>
+                <div className="flex bg-gray-50 p-1.5 rounded-2xl gap-2">
+                    <button
+                        onClick={() => setKind('expense')}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${kind === 'expense' ? 'bg-white text-red-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                    >
+                        <ArrowDownCircle className="h-4 w-4" /> Expense
+                    </button>
+                    <button
+                        onClick={() => setKind('income')}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${kind === 'income' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                    >
+                        <ArrowUpCircle className="h-4 w-4" /> Income
+                    </button>
+                </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-8">
                 {message && (
-                    <div className={`p-2 rounded text-sm ${message.includes('Error') || message.includes('Failed') ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
-                        {message}
-                    </div>
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className={`p-4 rounded-2xl text-xs font-black uppercase tracking-widest text-center ${message.type === 'error' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}
+                    >
+                        {message.text}
+                    </motion.div>
                 )}
 
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Date</label>
-                    <input
-                        type="date"
-                        required
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-gray-900 bg-white"
-                        value={occurredOn}
-                        onChange={e => setOccurredOn(e.target.value)}
-                    />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ml-1">Event Date</label>
+                        <input
+                            type="date"
+                            required
+                            className="w-full bg-gray-50 border-transparent rounded-[20px] px-6 py-4 text-gray-900 font-bold focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all text-sm outline-none"
+                            value={occurredOn}
+                            onChange={e => setOccurredOn(e.target.value)}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ml-1">Category</label>
+                        <select
+                            required
+                            className="w-full bg-gray-50 border-transparent rounded-[20px] px-6 py-4 text-gray-900 font-bold focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all text-sm outline-none appearance-none"
+                            value={categoryId}
+                            onChange={e => setCategoryId(e.target.value)}
+                        >
+                            {validCategories.map(cat => (
+                                <option key={cat.id} value={cat.id}>{cat.name}</option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
 
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Amount</label>
-                    <div className="relative mt-1 rounded-md shadow-sm">
-                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                            <span className="text-gray-500 sm:text-sm">$</span>
-                        </div>
+                <div className="relative">
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ml-1">Total Amount</label>
+                    <div className="relative group">
+                        <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-black text-gray-300 group-focus-within:text-indigo-600 transition-colors">$</span>
                         <input
                             type="number"
                             step="0.01"
                             required
                             placeholder="0.00"
-                            className="block w-full rounded-md border-gray-300 pl-7 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-gray-900 bg-white"
+                            className="w-full bg-gray-50 border-transparent rounded-[24px] pl-12 pr-6 py-5 text-2xl font-black text-gray-900 placeholder:text-gray-200 focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
                             value={amount}
                             onChange={e => setAmount(e.target.value)}
                         />
@@ -173,25 +174,11 @@ export function TransactionForm() {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Category</label>
-                    <select
-                        required
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-gray-900 bg-white"
-                        value={categoryId}
-                        onChange={e => setCategoryId(e.target.value)}
-                    >
-                        {validCategories.map(cat => (
-                            <option key={cat.id} value={cat.id}>{cat.name}</option>
-                        ))}
-                        {validCategories.length === 0 && <option value="">No categories</option>}
-                    </select>
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Note (Optional)</label>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ml-1">Reference Note (Optional)</label>
                     <input
                         type="text"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-gray-900 bg-white"
+                        placeholder="What was this for?"
+                        className="w-full bg-gray-50 border-transparent rounded-[20px] px-6 py-4 text-gray-900 font-bold focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all text-sm outline-none italic"
                         value={note}
                         onChange={e => setNote(e.target.value)}
                     />
@@ -200,11 +187,20 @@ export function TransactionForm() {
                 <button
                     type="submit"
                     disabled={isSubmitting || !categoryId}
-                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                    className="w-full bg-indigo-600 text-white rounded-[24px] py-5 font-black text-sm uppercase tracking-[0.2em] hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 disabled:opacity-50 relative overflow-hidden group active:scale-[0.98]"
                 >
-                    {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : 'Add Transaction'}
+                    {isSubmitting ? (
+                        <div className="flex items-center justify-center">
+                            <Loader2 className="animate-spin h-5 w-5" />
+                        </div>
+                    ) : (
+                        <div className="flex items-center justify-center gap-2">
+                            <Plus className="h-5 w-5 group-hover:rotate-90 transition-transform" />
+                            Submit Transaction
+                        </div>
+                    )}
                 </button>
             </form>
-        </div>
+        </motion.div>
     );
 }

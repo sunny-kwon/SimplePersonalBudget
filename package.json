@@ -11,15 +11,19 @@
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.89.0",
+    "@types/luxon": "^3.7.1",
     "chart.js": "^4.5.1",
     "drizzle-orm": "^0.45.1",
+    "framer-motion": "^12.24.10",
     "jspdf": "^4.0.0",
     "lucide-react": "^0.562.0",
+    "luxon": "^3.7.2",
     "next": "16.1.1",
     "postgres": "^3.4.7",
     "react": "19.2.3",
     "react-chartjs-2": "^5.3.1",
     "react-dom": "19.2.3",
+    "recharts": "^3.6.0",
     "resend": "^6.6.0"
   },
   "devDependencies": {
