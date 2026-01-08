@@ -1,11 +1,24 @@
 'use client';
 
+import * as React from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
+    return (
+        <React.Suspense fallback={
+            <div className="flex min-h-screen items-center justify-center bg-gray-50">
+                <Loader2 className="h-10 w-10 text-indigo-600 animate-spin opacity-20" />
+            </div>
+        }>
+            <LoginForm />
+        </React.Suspense>
+    );
+}
+
+function LoginForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [email, setEmail] = useState('');

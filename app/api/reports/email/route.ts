@@ -65,11 +65,11 @@ export async function POST(request: NextRequest) {
                         </div>
                     </div>
 
-                    ${stats.spendingByCategory.length > 0 ? `
-                        <h3>Top Spending Categories</h3>
-                        ${stats.spendingByCategory.slice(0, 5).map(cat => `
+                    ${stats.spendingBySection.length > 0 ? `
+                        <h3>Top Spending Sections</h3>
+                        ${stats.spendingBySection.slice(0, 5).map(sec => `
                             <div class="category">
-                                <strong>${cat.categoryName}:</strong> $${cat.amount.toFixed(2)}
+                                <strong>${sec.sectionName}:</strong> $${sec.amount.toFixed(2)}
                             </div>
                         `).join('')}
                     ` : ''}
