@@ -78,7 +78,7 @@ export default async function HomePage() {
 
                 <div className="space-y-12">
                     <SpendingChart data={stats.spendingBySection} />
-                    <TrendChart data={stats.dailyTrend} />
+                    <TrendChart data={stats.dailyTrend} sections={stats.sections} />
                 </div>
             </div>
         </div>

@@ -24,11 +24,11 @@ export function LandingHero() {
                     </motion.div>
 
                     <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-gray-900 mb-8 leading-[0.9] drop-shadow-sm px-4">
-                        Take absolute control of your <span className="text-indigo-600 relative inline-block">wealth.<div className="absolute -bottom-2 left-0 w-full h-3 bg-indigo-100/40 -z-10 rounded-full" /></span>
+                        Track your finances with <span className="text-indigo-600 relative inline-block">clarity.<div className="absolute -bottom-2 left-0 w-full h-3 bg-indigo-100/40 -z-10 rounded-full" /></span>
                     </h1>
 
                     <p className="text-xl md:text-2xl text-gray-500 mb-14 leading-relaxed font-semibold max-w-2xl mx-auto px-4">
-                        A beautifully simple, privacy-first financial dashboard built for high-performance tracking. No bank logins. No complexity.
+                        A simple, private way to track income and expenses—no bank logins, no noise.
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6 px-4">

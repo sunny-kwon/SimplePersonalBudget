@@ -35,6 +35,12 @@ export interface DashboardStats {
         date: string;
         income: number;
         expense: number;
+        [key: string]: string | number;
+    }[];
+    sections: {
+        id: string;
+        name: string;
+        color: string;
     }[];
     transactions: TransactionWithCategory[];
 }
@@ -132,9 +138,56 @@ export async function getDashboardStats(userId: string, monthDate: Date = new Da
                 }))
                 .sort((a, b) => b.amount - a.amount);
 
+            // Get all sections involved to ensure trend lines are consistent
+            const allSections = spendingBySection.map(s => ({
+                id: s.sectionId,
+                name: s.sectionName,
+                color: s.color
+            }));
+
+            // Finalize dailyTrend with flattened sections
+            // We need to make sure every day has every section key, even if 0
             const dailyTrend = Array.from(dailyMap.entries())
-                .map(([date, data]) => ({ date, ...data }))
-                .sort((a, b) => a.date.localeCompare(b.date));
+                .map(([date, data]) => {
+                    const row: any = { date, income: data.income, expense: data.expense };
+                    // Initialize all sections to 0
+                    allSections.forEach(s => {
+                        row[s.name] = 0;
+                    });
+
+                    // Fill with actual data if we tracked it per day
+                    // Wait, I need to track per-section per-day in Step 2 loop
+                    return row;
+                });
+
+            // Re-doing Step 2 loop slightly to track section amounts per day
+            const dailySectionMap = new Map<string, Map<string, number>>(); // date -> (sectionName -> amount)
+
+            for (const t of txs) {
+                if (t.kind === 'expense') {
+                    const date = t.occurredOn;
+                    const secName = t.category?.section?.name || 'Uncategorized';
+                    const amt = parseFloat(t.amount);
+
+                    if (!dailySectionMap.has(date)) {
+                        dailySectionMap.set(date, new Map());
+                    }
+                    const daySecs = dailySectionMap.get(date)!;
+                    daySecs.set(secName, (daySecs.get(secName) || 0) + amt);
+                }
+            }
+
+            // Apply the daily section values to dailyTrend
+            dailyTrend.forEach(row => {
+                const daySecs = dailySectionMap.get(row.date);
+                if (daySecs) {
+                    daySecs.forEach((amt, name) => {
+                        row[name] = amt;
+                    });
+                }
+            });
+
+            dailyTrend.sort((a, b) => a.date.localeCompare(b.date));
 
             return {
                 totalIncome,
@@ -142,6 +195,7 @@ export async function getDashboardStats(userId: string, monthDate: Date = new Da
                 net: totalIncome - totalExpense,
                 spendingBySection,
                 dailyTrend,
+                sections: allSections,
                 transactions: txs
             };
         },

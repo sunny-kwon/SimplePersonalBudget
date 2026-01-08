@@ -94,7 +94,15 @@ export function SpendingChart({ data }: SpendingChartProps) {
                             verticalAlign="bottom"
                             align="center"
                             iconType="circle"
-                            formatter={(value) => <span className="text-xs font-bold text-gray-500 uppercase tracking-wide ml-1">{value}</span>}
+                            formatter={(value) => {
+                                const item = data.find(d => d.sectionName === value);
+                                const percentage = item ? item.percentage.toFixed(0) : 0;
+                                return (
+                                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
+                                        {value} <span className="text-indigo-400 ml-1">{percentage}%</span>
+                                    </span>
+                                );
+                            }}
                         />
                     </PieChart>
                 </ResponsiveContainer>
@@ -103,7 +111,10 @@ export function SpendingChart({ data }: SpendingChartProps) {
             <div className="mt-6 grid grid-cols-2 gap-4">
                 {data.slice(0, 2).map(item => (
                     <div key={item.sectionId} className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{item.sectionName}</p>
+                        <div className="flex justify-between items-start mb-1">
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{item.sectionName}</p>
+                            <span className="text-[10px] font-black text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded-md">{item.percentage.toFixed(0)}%</span>
+                        </div>
                         <p className="text-lg font-black text-gray-900">${item.amount.toLocaleString()}</p>
                     </div>
                 ))}
