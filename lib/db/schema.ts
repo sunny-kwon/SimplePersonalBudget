@@ -13,7 +13,7 @@ export const userProfile = pgTable('user_profile', {
 // Sections table
 export const section = pgTable('section', {
     id: uuid('id').defaultRandom().primaryKey(),
-    userId: uuid('user_id').notNull(),
+    userId: uuid('user_id').notNull().references(() => userProfile.userId, { onDelete: 'cascade' }),
     name: text('name').notNull(),
     color: text('color').default('#6366f1').notNull(),
     order: numeric('order').default('0').notNull(),
@@ -29,7 +29,7 @@ export const sectionRelations = relations(section, ({ many }) => ({
 // Categories table
 export const category = pgTable('category', {
     id: uuid('id').defaultRandom().primaryKey(),
-    userId: uuid('user_id').notNull(), // References auth.users(id)
+    userId: uuid('user_id').notNull().references(() => userProfile.userId, { onDelete: 'cascade' }),
     sectionId: uuid('section_id').references(() => section.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
     type: text('type', { enum: ['expense', 'income', 'both'] }).notNull(),
@@ -52,8 +52,8 @@ export const categoryRelations = relations(category, ({ one, many }) => ({
 // Transactions table
 export const transaction = pgTable('transaction', {
     id: uuid('id').defaultRandom().primaryKey(),
-    userId: uuid('user_id').notNull(), // References auth.users(id)
-    categoryId: uuid('category_id').references(() => category.id, { onDelete: 'set null' }),
+    userId: uuid('user_id').notNull().references(() => userProfile.userId, { onDelete: 'cascade' }),
+    categoryId: uuid('category_id').references(() => category.id, { onDelete: 'cascade' }),
     amount: numeric('amount', { precision: 12, scale: 2 }).notNull(),
     kind: text('kind', { enum: ['expense', 'income'] }).notNull(),
     occurredOn: date('occurred_on').notNull(),
@@ -77,7 +77,7 @@ export const transactionRelations = relations(transaction, ({ one }) => ({
 // Tags table
 export const tag = pgTable('tag', {
     id: uuid('id').defaultRandom().primaryKey(),
-    userId: uuid('user_id').notNull(), // References auth.users(id)
+    userId: uuid('user_id').notNull().references(() => userProfile.userId, { onDelete: 'cascade' }),
     name: text('name').notNull(),
 }, (t) => ({
     unq: unique().on(t.userId, t.name),

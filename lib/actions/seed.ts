@@ -12,37 +12,37 @@ const DEFAULT_SECTIONS = [
     { name: 'Food', order: '3', color: '#f59e0b' },
     { name: 'Wants', order: '4', color: '#8b5cf6' },
     { name: 'Savings', order: '5', color: '#3b82f6' },
-    { name: 'Investing', order: '6', color: '#6366f1' },
 ] as const;
 
 const DEFAULT_CATEGORIES = [
     // Income
     { name: 'Salary', type: 'income' as const, sectionName: 'Income' },
-    { name: 'Interest', type: 'income' as const, sectionName: 'Income' },
     { name: 'Other Income', type: 'income' as const, sectionName: 'Income' },
 
     // Giving
-    { name: 'Tithing', type: 'expense' as const, sectionName: 'Giving' },
+    { name: 'Tithe', type: 'expense' as const, sectionName: 'Giving' },
     { name: 'Advance Campaign', type: 'expense' as const, sectionName: 'Giving' },
+    { name: 'Gifts', type: 'expense' as const, sectionName: 'Giving' },
 
     // Needs
     { name: 'Rent', type: 'expense' as const, sectionName: 'Needs' },
     { name: 'Transport', type: 'expense' as const, sectionName: 'Needs' },
     { name: 'Utilities', type: 'expense' as const, sectionName: 'Needs' },
+    { name: 'Car Payment', type: 'expense' as const, sectionName: 'Needs' },
 
     // Food
     { name: 'Groceries', type: 'expense' as const, sectionName: 'Food' },
-    { name: 'Eating Out', type: 'expense' as const, sectionName: 'Food' },
+    { name: 'Dining Out', type: 'expense' as const, sectionName: 'Food' },
 
     // Wants
-    { name: 'Date Night', type: 'expense' as const, sectionName: 'Wants' },
-    { name: 'Other Expense', type: 'expense' as const, sectionName: 'Wants' },
+    { name: 'Netflix', type: 'expense' as const, sectionName: 'Wants' },
+    { name: 'Spotify', type: 'expense' as const, sectionName: 'Wants' },
+    { name: 'Miscellaneous', type: 'expense' as const, sectionName: 'Wants' },
 
     // Savings
     { name: 'Emergency Fund', type: 'expense' as const, sectionName: 'Savings' },
-
-    // Investing
-    { name: 'Retirement', type: 'expense' as const, sectionName: 'Investing' },
+    { name: 'Travel Fund', type: 'expense' as const, sectionName: 'Savings' },
+    { name: 'Roth IRA', type: 'expense' as const, sectionName: 'Savings' },
 ] as const;
 
 export async function ensureUserExists(user: User) {

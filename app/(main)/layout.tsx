@@ -79,7 +79,7 @@ export default async function MainLayout({
             <footer className="py-12 relative z-10 border-t border-gray-100 mt-20">
                 <div className="mx-auto max-w-7xl px-4 text-center space-y-4">
                     <p className="text-sm font-medium text-gray-500 max-w-md mx-auto leading-relaxed">
-                        If you have any suggestions on improving this app or find a bug, please let <span className="text-indigo-600 font-bold underline decoration-indigo-200 underline-offset-4">Sunny</span> know or email him at <a href="mailto:sunnykwondev@gmail.com" className="text-indigo-600 font-bold hover:text-indigo-700 transition-colors underline decoration-indigo-200 underline-offset-4">sunnykwondev@gmail.com</a>
+                        If you have any suggestions on improving this app or find a bug, please let me know or email him at <a href="mailto:sunnykwondev@gmail.com" className="text-indigo-600 font-bold hover:text-indigo-700 transition-colors underline decoration-indigo-200 underline-offset-4">sunnykwondev@gmail.com</a>
                     </p>
                     <p className="text-xs font-bold text-gray-300 uppercase tracking-widest">© 2026 Simple Personal Budgeting</p>
                 </div>
