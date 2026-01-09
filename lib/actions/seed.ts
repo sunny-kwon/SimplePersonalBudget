@@ -17,11 +17,9 @@ const DEFAULT_SECTIONS = [
 const DEFAULT_CATEGORIES = [
     // Income
     { name: 'Salary', type: 'income' as const, sectionName: 'Income' },
-    { name: 'Other Income', type: 'income' as const, sectionName: 'Income' },
 
     // Giving
     { name: 'Tithe', type: 'expense' as const, sectionName: 'Giving' },
-    { name: 'Advance Campaign', type: 'expense' as const, sectionName: 'Giving' },
     { name: 'Gifts', type: 'expense' as const, sectionName: 'Giving' },
 
     // Needs

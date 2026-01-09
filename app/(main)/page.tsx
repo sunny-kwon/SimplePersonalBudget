@@ -60,7 +60,7 @@ export default async function HomePage() {
                     href="/categories"
                     className="inline-flex items-center gap-2 px-8 py-4 bg-white border border-gray-100 shadow-sm text-sm font-black rounded-2xl text-gray-700 hover:shadow-md transition-all active:scale-95"
                 >
-                    Configure Structure <ArrowRight className="h-4 w-4" />
+                    Manage Categories <ArrowRight className="h-4 w-4" />
                 </Link>
             </div>
 
