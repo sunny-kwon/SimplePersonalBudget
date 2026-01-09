@@ -34,7 +34,7 @@ export function RecentTransactions({ transactions }: { transactions: Transaction
                     href="/transactions"
                     className="group inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-indigo-100 transition-all"
                 >
-                    View History <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    View All Transactions <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
             </div>
             <div className="flow-root">

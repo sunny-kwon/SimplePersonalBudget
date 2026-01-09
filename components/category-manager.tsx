@@ -22,6 +22,7 @@ type Section = {
 export function CategoryManager() {
     const [sections, setSections] = useState<Section[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState<'expense' | 'income'>('expense');
 
     // Section State
     const [isAddingSection, setIsAddingSection] = useState(false);
@@ -33,7 +34,6 @@ export function CategoryManager() {
     const [isAddingCategory, setIsAddingCategory] = useState<{ sectionId: string | null } | null>(null);
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
     const [catName, setCatName] = useState('');
-    const [catType, setCatType] = useState<'income' | 'expense'>('expense');
     const [catSectionId, setCatSectionId] = useState<string>('');
 
     const fetchData = async () => {
@@ -151,7 +151,7 @@ export function CategoryManager() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name: catName,
-                    type: catType,
+                    type: activeTab,
                     sectionId: isAddingCategory.sectionId
                 }),
             });
@@ -201,119 +201,140 @@ export function CategoryManager() {
 
     return (
         <div className="space-y-8">
-            <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                <div>
-                    <h2 className="text-xl font-bold text-gray-900">Budget Structure</h2>
-                    <p className="text-sm text-gray-500">Manage sections and categories</p>
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <div className="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 className="text-xl font-bold text-gray-900">Budget Structure</h2>
+                        <p className="text-sm text-gray-500">Manage sections and categories</p>
+                    </div>
+                    <button
+                        onClick={() => {
+                            setIsAddingSection(true);
+                            setSectionName('');
+                            setSectionColor('#6366f1');
+                        }}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-all shadow-sm"
+                    >
+                        <Plus className="h-4 w-4" />
+                        New Section
+                    </button>
                 </div>
-                <button
-                    onClick={() => {
-                        setIsAddingSection(true);
-                        setSectionName('');
-                        setSectionColor('#6366f1');
-                    }}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-all shadow-sm"
-                >
-                    <Plus className="h-4 w-4" />
-                    New Section
-                </button>
+
+                <div className="flex p-1 bg-gray-100 rounded-lg w-full max-w-sm">
+                    <button
+                        onClick={() => setActiveTab('expense')}
+                        className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${activeTab === 'expense' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                        Expenses
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('income')}
+                        className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${activeTab === 'income' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                        Income
+                    </button>
+                </div>
             </div>
 
             {/* Sections List */}
             <div className="space-y-6">
-                {sections.map((section, idx) => (
-                    <div key={section.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                        {/* Section Header */}
-                        <div className="bg-gray-50 px-6 py-3 border-b border-gray-200 flex items-center justify-between group">
-                            <div className="flex items-center gap-4">
-                                <div
-                                    className="w-4 h-4 rounded-full ring-2 ring-white"
-                                    style={{ backgroundColor: section.color }}
-                                />
-                                <h3 className="text-sm font-black uppercase tracking-wider text-gray-500">{section.name}</h3>
-                                <div className="hidden group-hover:flex items-center gap-1">
+                {sections
+                    .map(section => ({
+                        ...section,
+                        categories: section.categories.filter(cat =>
+                            activeTab === 'expense'
+                                ? (cat.type === 'expense' || cat.type === 'both')
+                                : (cat.type === 'income' || cat.type === 'both')
+                        )
+                    }))
+                    .filter(section => {
+                        const hasMatchingCategories = section.categories.length > 0;
+                        const isTrulyEmpty = sections.find(s => s.id === section.id)?.categories.length === 0;
+                        return hasMatchingCategories || isTrulyEmpty;
+                    })
+                    .map((section, idx) => (
+                        <div key={section.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                            {/* Section Header */}
+                            <div className="bg-gray-50 px-6 py-3 border-b border-gray-200 flex items-center justify-between group">
+                                <div className="flex items-center gap-4">
+                                    <div
+                                        className="w-4 h-4 rounded-full ring-2 ring-white"
+                                        style={{ backgroundColor: section.color }}
+                                    />
+                                    <h3 className="text-sm font-black uppercase tracking-wider text-gray-500">{section.name}</h3>
+                                    <div className="hidden group-hover:flex items-center gap-1">
+                                        <button
+                                            disabled={idx === 0}
+                                            onClick={() => moveSection(section.id, 'up')}
+                                            className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
+                                        >
+                                            <ChevronUp className="h-4 w-4" />
+                                        </button>
+                                        <button
+                                            disabled={idx === sections.length - 1}
+                                            onClick={() => moveSection(section.id, 'down')}
+                                            className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
+                                        >
+                                            <ChevronDown className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
                                     <button
-                                        disabled={idx === 0}
-                                        onClick={() => moveSection(section.id, 'up')}
-                                        className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
+                                        onClick={() => {
+                                            setEditingSection(section);
+                                            setSectionName(section.name);
+                                            setSectionColor(section.color);
+                                        }}
+                                        className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-all"
                                     >
-                                        <ChevronUp className="h-4 w-4" />
+                                        <Pencil className="h-4 w-4" />
                                     </button>
                                     <button
-                                        disabled={idx === sections.length - 1}
-                                        onClick={() => moveSection(section.id, 'down')}
-                                        className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
+                                        onClick={() => handleDeleteSection(section.id)}
+                                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-all"
                                     >
-                                        <ChevronDown className="h-4 w-4" />
+                                        <Trash2 className="h-4 w-4" />
                                     </button>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => {
-                                        setEditingSection(section);
-                                        setSectionName(section.name);
-                                        setSectionColor(section.color);
-                                    }}
-                                    className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-all"
-                                >
-                                    <Pencil className="h-4 w-4" />
-                                </button>
-                                <button
-                                    onClick={() => handleDeleteSection(section.id)}
-                                    className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-all"
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </button>
-                            </div>
-                        </div>
 
-                        {/* Categories in Section */}
-                        <div className="p-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                {section.categories.map((cat) => (
-                                    <div
-                                        key={cat.id}
+                            {/* Categories in Section */}
+                            <div className="p-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {section.categories.map((cat) => (
+                                        <div
+                                            key={cat.id}
+                                            onClick={() => {
+                                                setEditingCategory(cat);
+                                                setCatName(cat.name);
+                                                setCatSectionId(cat.sectionId || '');
+                                            }}
+                                            className="flex items-center justify-between p-3 bg-gray-50 border border-transparent rounded-lg hover:bg-white hover:border-indigo-200 hover:shadow-sm transition-all cursor-pointer group"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div
+                                                    className="w-3 h-3 rounded-full ring-2 ring-white"
+                                                    style={{ backgroundColor: section.color }}
+                                                />
+                                                <div className="font-semibold text-gray-700">{cat.name}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <button
                                         onClick={() => {
-                                            setEditingCategory(cat);
-                                            setCatName(cat.name);
-                                            setCatType(cat.type === 'both' ? 'expense' : cat.type);
-                                            setCatSectionId(cat.sectionId || '');
+                                            setIsAddingCategory({ sectionId: section.id });
+                                            setCatName('');
                                         }}
-                                        className="flex items-center justify-between p-3 bg-gray-50 border border-transparent rounded-lg hover:bg-white hover:border-indigo-200 hover:shadow-sm transition-all cursor-pointer group"
+                                        className="flex items-center gap-2 p-3 border-2 border-dashed border-gray-200 rounded-lg text-gray-400 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50 transition-all text-sm font-medium"
                                     >
-                                        <div className="flex items-center gap-3">
-                                            <div
-                                                className="w-3 h-3 rounded-full ring-2 ring-white"
-                                                style={{ backgroundColor: section.color }}
-                                            />
-                                            <div className="font-semibold text-gray-700">{cat.name}</div>
-                                        </div>
-                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); handleDeleteCategory(cat.id); }}
-                                                className="p-1 text-gray-400 hover:text-red-600 rounded"
-                                            >
-                                                <Trash2 className="h-3.5 w-3.5" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                                <button
-                                    onClick={() => {
-                                        setIsAddingCategory({ sectionId: section.id });
-                                        setCatName('');
-                                        setCatType('expense');
-                                    }}
-                                    className="flex items-center gap-2 p-3 border-2 border-dashed border-gray-200 rounded-lg text-gray-400 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50 transition-all text-sm font-medium"
-                                >
-                                    <Plus className="h-4 w-4" />
-                                    Add Category
-                                </button>
+                                        <Plus className="h-4 w-4" />
+                                        Add Category
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    ))}
             </div>
 
             {/* Empty State */}
@@ -397,25 +418,6 @@ export function CategoryManager() {
                                     autoFocus
                                 />
                             </div>
-                            <div>
-                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Type</label>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => setCatType('expense')}
-                                        className={`py-3 rounded-xl font-bold border-2 transition-all ${catType === 'expense' ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-gray-100 text-gray-400'}`}
-                                    >
-                                        Expense
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setCatType('income')}
-                                        className={`py-3 rounded-xl font-bold border-2 transition-all ${catType === 'income' ? 'border-indigo-600 bg-indigo-50 text-indigo-600' : 'border-gray-100 text-gray-400'}`}
-                                    >
-                                        Income
-                                    </button>
-                                </div>
-                            </div>
                             <div className="flex gap-3 pt-4">
                                 <button type="submit" className="flex-1 px-4 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">
                                     Create Category
@@ -461,12 +463,22 @@ export function CategoryManager() {
                                     ))}
                                 </select>
                             </div>
-                            <div className="flex gap-3 pt-4">
-                                <button type="submit" className="flex-1 px-4 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">
-                                    Save Changes
-                                </button>
-                                <button type="button" onClick={() => setEditingCategory(null)} className="px-6 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200 transition-all">
-                                    Cancel
+                            <div className="flex flex-col gap-3 pt-4">
+                                <div className="flex gap-3">
+                                    <button type="submit" className="flex-1 px-4 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">
+                                        Save Changes
+                                    </button>
+                                    <button type="button" onClick={() => setEditingCategory(null)} className="px-6 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200 transition-all">
+                                        Cancel
+                                    </button>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => handleDeleteCategory(editingCategory.id)}
+                                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 transition-all"
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                    Delete Category
                                 </button>
                             </div>
                         </form>
