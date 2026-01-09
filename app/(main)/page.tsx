@@ -6,6 +6,7 @@ import { RecentTransactions } from '@/components/recent-transactions';
 import { KPICards } from '@/components/dashboard/kpi-cards';
 import { SpendingChart } from '@/components/dashboard/spending-chart';
 import { TrendChart } from '@/components/dashboard/trend-chart';
+import { BudgetProgress } from '@/components/dashboard/budget-progress';
 import { ArrowRight, Wallet, Target, Sparkles } from 'lucide-react';
 import { getDashboardStats } from '@/lib/analytics';
 import { LandingHero } from '@/components/landing-hero';
@@ -77,6 +78,9 @@ export default async function HomePage() {
                 </div>
 
                 <div className="space-y-12">
+                    {stats.budget && (
+                        <BudgetProgress budget={stats.budget} sections={stats.sections} />
+                    )}
                     <SpendingChart data={stats.spendingBySection} />
                     <TrendChart data={stats.dailyTrend} sections={stats.sections} />
                 </div>

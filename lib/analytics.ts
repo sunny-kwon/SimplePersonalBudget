@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
-import { transaction, section, category } from '@/lib/db/schema';
-import { eq, and, gte, lte, desc } from 'drizzle-orm';
+import { transaction, section, category, budgetConfig, budgetAllocation } from '@/lib/db/schema';
+import { eq, and, gte, lte, desc, sql, isNull } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
 
 // Define the transaction type with its relations as returned by Drizzle query
@@ -42,6 +42,15 @@ export interface DashboardStats {
         name: string;
         color: string;
     }[];
+    budget: {
+        totalTarget: number;
+        planned: number;
+        sections: {
+            sectionId: string;
+            planned: number;
+            actual: number;
+        }[];
+    } | null;
     transactions: TransactionWithCategory[];
 }
 
@@ -84,6 +93,39 @@ export async function getDashboardStats(userId: string, monthDate: Date = new Da
                 orderBy: [desc(transaction.occurredOn), desc(transaction.createdAt)]
             }) as TransactionWithCategory[];
 
+            // 1.5 Fetch budget info
+            const [bConfig] = await db.select().from(budgetConfig).where(eq(budgetConfig.userId, userId));
+            const bAllocationsRaw = await db.select().from(budgetAllocation).where(and(
+                eq(budgetAllocation.userId, userId),
+                isNull(budgetAllocation.categoryId) // Only section-level for dashboard
+            ));
+
+            // Filter out income-only sections from budget allocations
+            const allSectionsData = await db.query.section.findMany({
+                where: eq(section.userId, userId),
+                with: { categories: true }
+            });
+            const expenseSectionIds = new Set(
+                allSectionsData
+                    .filter(s => s.categories.length === 0 || s.categories.some(c => c.type === 'expense' || c.type === 'both'))
+                    .map(s => s.id)
+            );
+            const bAllocations = bAllocationsRaw.filter(a => expenseSectionIds.has(a.sectionId));
+
+            // Budget Scaling Logic
+            // We want to scale the "Standing Budget" to the specific month being viewed.
+            // If budget is Weekly, we calculate (Monthly Days / 7) * Amount.
+            const daysInMonth = endOfMonth.getDate();
+            let scalingFactor = 1;
+
+            if (bConfig) {
+                if (bConfig.period === 'weekly') scalingFactor = daysInMonth / 7;
+                else if (bConfig.period === 'bi-weekly') scalingFactor = daysInMonth / 14;
+                // 'monthly' is 1:1 since the dashboard shows by calendar month
+            }
+
+            const scale = (val: string | number) => parseFloat(val.toString()) * scalingFactor;
+
             // 2. Aggregates
             let totalIncome = 0;
             let totalExpense = 0;
@@ -91,7 +133,6 @@ export async function getDashboardStats(userId: string, monthDate: Date = new Da
             const dailyMap = new Map<string, { income: number; expense: number }>();
 
             // Pre-fill daily map for the entire month to ensure no gaps in trend chart
-            const daysInMonth = endOfMonth.getDate();
             for (let d = 1; d <= daysInMonth; d++) {
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                 dailyMap.set(dateStr, { income: 0, expense: 0 });
@@ -138,12 +179,14 @@ export async function getDashboardStats(userId: string, monthDate: Date = new Da
                 }))
                 .sort((a, b) => b.amount - a.amount);
 
-            // Get all sections involved to ensure trend lines are consistent
-            const allSections = spendingBySection.map(s => ({
-                id: s.sectionId,
-                name: s.sectionName,
-                color: s.color
-            }));
+            // Get ALL expense sections to ensure planned ones show up even with 0 spending
+            const allSections = allSectionsData
+                .filter(s => s.categories.length === 0 || s.categories.some(c => c.type === 'expense' || c.type === 'both'))
+                .map(s => ({
+                    id: s.id,
+                    name: s.name,
+                    color: s.color
+                }));
 
             // Finalize dailyTrend with flattened sections
             // We need to make sure every day has every section key, even if 0
@@ -196,7 +239,23 @@ export async function getDashboardStats(userId: string, monthDate: Date = new Da
                 spendingBySection,
                 dailyTrend,
                 sections: allSections,
-                transactions: txs
+                transactions: txs,
+                budget: bConfig ? {
+                    totalTarget: scale(bConfig.totalTarget),
+                    planned: bAllocations.reduce((sum, a) => {
+                        const val = a.allocationType === 'percentage'
+                            ? (scale(bConfig.totalTarget) * parseFloat(a.percentage) / 100)
+                            : scale(a.amount);
+                        return sum + val;
+                    }, 0),
+                    sections: bAllocations.map(a => ({
+                        sectionId: a.sectionId,
+                        planned: a.allocationType === 'percentage'
+                            ? (scale(bConfig.totalTarget) * parseFloat(a.percentage) / 100)
+                            : scale(a.amount),
+                        actual: sectionMap.get(a.sectionId)?.amount || 0
+                    }))
+                } : null
             };
         },
         [`dashboard-stats-${userId}-${year}-${month}`],
