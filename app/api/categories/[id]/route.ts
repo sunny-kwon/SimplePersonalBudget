@@ -4,6 +4,7 @@ import { category } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import { revalidateTag, revalidatePath } from 'next/cache';
 
 export async function PATCH(
     request: Request,
@@ -42,6 +43,11 @@ export async function PATCH(
             .where(and(eq(category.id, categoryId), eq(category.userId, user.id)))
             .returning();
 
+        if (updated) {
+            revalidatePath('/');
+            revalidateTag(`transactions-${user.id}`);
+        }
+
         if (!updated) {
             return new NextResponse('Category not found', { status: 404 });
         }
@@ -73,6 +79,11 @@ export async function DELETE(
             .delete(category)
             .where(and(eq(category.id, categoryId), eq(category.userId, user.id)))
             .returning();
+
+        if (deleted) {
+            revalidatePath('/');
+            revalidateTag(`transactions-${user.id}`);
+        }
 
         if (!deleted) {
             return new NextResponse('Category not found', { status: 404 });

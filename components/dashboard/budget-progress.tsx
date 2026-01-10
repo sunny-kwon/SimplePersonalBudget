@@ -6,6 +6,7 @@ interface BudgetProgressProps {
     budget: {
         totalTarget: number;
         planned: number;
+        realized: number;
         sections: {
             sectionId: string;
             planned: number;
@@ -20,9 +21,9 @@ interface BudgetProgressProps {
 }
 
 export function BudgetProgress({ budget, sections }: BudgetProgressProps) {
-    const overallProgress = budget.totalTarget > 0 ? (budget.planned / budget.totalTarget) * 100 : 0;
     const actualSpend = budget.sections.reduce((sum, s) => sum + s.actual, 0);
     const spendProgress = budget.planned > 0 ? (actualSpend / budget.planned) * 100 : 0;
+    const incomeProgress = budget.totalTarget > 0 ? (budget.realized / budget.totalTarget) * 100 : 0;
 
     return (
         <div className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm space-y-8">
@@ -33,28 +34,52 @@ export function BudgetProgress({ budget, sections }: BudgetProgressProps) {
                     </div>
                     <div>
                         <h3 className="text-xl font-black text-gray-900 leading-tight">Budget Progress</h3>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Actual vs Planned</p>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Plan vs Reality</p>
                     </div>
                 </div>
                 <div className="text-right">
                     <div className="text-2xl font-black text-gray-900">${actualSpend.toFixed(0)}</div>
-                    <div className="text-xs font-bold text-gray-400 uppercase">of ${budget.planned.toFixed(0)}</div>
+                    <div className="text-xs font-bold text-gray-400 uppercase">spent of ${budget.planned.toFixed(0)}</div>
                 </div>
             </div>
 
-            {/* Overall Progress */}
-            <div className="space-y-3">
-                <div className="flex justify-between text-sm font-black italic">
-                    <span className="text-gray-500">Total Planning Progress</span>
-                    <span className={spendProgress > 100 ? "text-red-600" : "text-indigo-600"}>
-                        {spendProgress.toFixed(0)}%
-                    </span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6 bg-gray-50/50 rounded-3xl border border-gray-100">
+                {/* Income vs Budget Target */}
+                <div className="space-y-3">
+                    <div className="flex justify-between text-xs font-black uppercase tracking-widest">
+                        <span className="text-gray-400">Income Coverage</span>
+                        <span className={incomeProgress >= 100 ? "text-green-600" : "text-orange-500"}>
+                            {incomeProgress.toFixed(0)}%
+                        </span>
+                    </div>
+                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                            className={`h-full rounded-full transition-all duration-1000 ${incomeProgress >= 100 ? 'bg-green-500' : 'bg-orange-400'}`}
+                            style={{ width: `${Math.min(100, incomeProgress)}%` }}
+                        />
+                    </div>
+                    <p className="text-[10px] font-bold text-gray-500 italic">
+                        ${budget.realized.toFixed(0)} earned of ${budget.totalTarget.toFixed(0)} planned
+                    </p>
                 </div>
-                <div className="h-4 bg-gray-100 rounded-full overflow-hidden p-1">
-                    <div
-                        className={`h-full rounded-full transition-all duration-1000 ${spendProgress > 100 ? 'bg-red-500' : 'bg-indigo-600'}`}
-                        style={{ width: `${Math.min(100, spendProgress)}%` }}
-                    />
+
+                {/* Spend vs Planned */}
+                <div className="space-y-3">
+                    <div className="flex justify-between text-xs font-black uppercase tracking-widest">
+                        <span className="text-gray-400">Budget Spent</span>
+                        <span className={spendProgress > 100 ? "text-red-500" : "text-indigo-600"}>
+                            {spendProgress.toFixed(0)}%
+                        </span>
+                    </div>
+                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                            className={`h-full rounded-full transition-all duration-1000 ${spendProgress > 100 ? 'bg-red-500' : 'bg-indigo-600'}`}
+                            style={{ width: `${Math.min(100, spendProgress)}%` }}
+                        />
+                    </div>
+                    <p className="text-[10px] font-bold text-gray-500 italic">
+                        ${actualSpend.toFixed(0)} spent of ${budget.planned.toFixed(0)} allocated
+                    </p>
                 </div>
             </div>
 

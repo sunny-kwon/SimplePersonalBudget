@@ -5,7 +5,7 @@ import { db } from '@/lib/db';
 import { budgetConfig, budgetAllocation, section, category } from '@/lib/db/schema';
 import { eq, and, sql, isNull } from 'drizzle-orm';
 import { cookies } from 'next/headers';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 
 export async function getBudgetData() {
     const cookieStore = await cookies();
@@ -42,13 +42,17 @@ export async function getBudgetData() {
     });
 
     return {
-        config: config || { userId: user.id, period: 'monthly', totalTarget: '0' },
+        config: config || { userId: user.id, period: 'monthly', totalTarget: '0', cycleStartDate: new Date().toISOString().split('T')[0] },
         allocations: filteredAllocations,
         sections: expenseSections
     };
 }
 
-export async function updateBudgetConfig(data: { period: 'weekly' | 'bi-weekly' | 'monthly', totalTarget: string }) {
+export async function updateBudgetConfig(data: {
+    period: 'weekly' | 'bi-weekly' | 'monthly',
+    totalTarget: string,
+    cycleStartDate: string
+}) {
     const cookieStore = await cookies();
     const supabase = await createClient(cookieStore);
     const { data: { user } } = await supabase.auth.getUser();
@@ -60,6 +64,7 @@ export async function updateBudgetConfig(data: { period: 'weekly' | 'bi-weekly' 
             userId: user.id,
             period: data.period,
             totalTarget: data.totalTarget,
+            cycleStartDate: data.cycleStartDate,
             updatedAt: new Date(),
         })
         .onConflictDoUpdate({
@@ -67,12 +72,14 @@ export async function updateBudgetConfig(data: { period: 'weekly' | 'bi-weekly' 
             set: {
                 period: data.period,
                 totalTarget: data.totalTarget,
+                cycleStartDate: data.cycleStartDate,
                 updatedAt: new Date(),
             }
         });
 
     revalidatePath('/budget');
     revalidatePath('/');
+    revalidateTag(`budget-${user.id}`);
 }
 
 // Improved updateAllocation that uses simpler logic to avoid Drizzle's onConflict limitations with partial indexes.
@@ -128,6 +135,7 @@ export async function saveAllocation(data: {
 
     revalidatePath('/budget');
     revalidatePath('/');
+    revalidateTag(`budget-${user.id}`);
 }
 export async function deleteAllocation(sectionId: string, categoryId: string | null) {
     const cookieStore = await cookies();
@@ -147,4 +155,5 @@ export async function deleteAllocation(sectionId: string, categoryId: string | n
 
     revalidatePath('/budget');
     revalidatePath('/');
+    revalidateTag(`budget-${user.id}`);
 }

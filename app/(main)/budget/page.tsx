@@ -25,10 +25,15 @@ type Allocation = {
 type BudgetConfig = {
     period: 'weekly' | 'bi-weekly' | 'monthly';
     totalTarget: string;
+    cycleStartDate: string;
 };
 
 export default function BudgetPage() {
-    const [config, setConfig] = useState<BudgetConfig>({ period: 'monthly', totalTarget: '0' });
+    const [config, setConfig] = useState<BudgetConfig>({
+        period: 'monthly',
+        totalTarget: '0',
+        cycleStartDate: new Date().toISOString().split('T')[0]
+    });
     const [sections, setSections] = useState<Section[]>([]);
     const [allocations, setAllocations] = useState<Allocation[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -41,7 +46,8 @@ export default function BudgetPage() {
             const data = await getBudgetData();
             setConfig({
                 period: data.config.period as BudgetConfig['period'],
-                totalTarget: data.config.totalTarget
+                totalTarget: data.config.totalTarget,
+                cycleStartDate: data.config.cycleStartDate
             });
             setSections(data.sections as Section[]);
             setAllocations(data.allocations.map(a => ({
@@ -173,7 +179,7 @@ export default function BudgetPage() {
     const remainingToPlan = (parseFloat(config.totalTarget) || 0) - totalPlanned;
 
     return (
-        <div className="max-w-4xl mx-auto space-y-8 pb-20">
+        <div className="space-y-12 pb-20 font-sans">
             {/* Header / Config */}
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
                 <div className="flex flex-col md:flex-row md:items-end gap-6">
@@ -184,7 +190,7 @@ export default function BudgetPage() {
                         </div>
                         <p className="text-gray-500">Set your target budget and distribute it across sections.</p>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
                             <div>
                                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Budget Period</label>
                                 <select
@@ -194,8 +200,18 @@ export default function BudgetPage() {
                                 >
                                     <option value="weekly">Weekly</option>
                                     <option value="bi-weekly">Bi-weekly</option>
-                                    <option value="monthly">Monthly</option>
+                                    <option value="monthly">Monthly (Calendar)</option>
                                 </select>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Cycle Start Date</label>
+                                <input
+                                    type="date"
+                                    className="w-full bg-gray-50 border-gray-100 text-gray-900 rounded-xl px-4 py-3 font-semibold focus:ring-2 focus:ring-indigo-500"
+                                    value={config.cycleStartDate}
+                                    onChange={(e) => setConfig({ ...config, cycleStartDate: e.target.value })}
+                                />
+                                <p className="text-[10px] text-gray-400 mt-1 italic leading-tight">Defines your period boundaries (e.g. payday)</p>
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Total Target (${config.period})</label>

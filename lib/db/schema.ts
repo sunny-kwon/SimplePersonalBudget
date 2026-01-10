@@ -96,6 +96,7 @@ export const budgetConfig = pgTable('budget_config', {
     userId: uuid('user_id').primaryKey().notNull().references(() => userProfile.userId, { onDelete: 'cascade' }),
     period: text('period', { enum: ['weekly', 'bi-weekly', 'monthly'] }).default('monthly').notNull(),
     totalTarget: numeric('total_target', { precision: 12, scale: 2 }).default('0').notNull(),
+    cycleStartDate: date('cycle_start_date').default(sql`CURRENT_DATE`).notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 

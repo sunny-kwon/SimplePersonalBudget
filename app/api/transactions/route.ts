@@ -76,6 +76,7 @@ export async function POST(request: Request) {
         }).returning();
 
         revalidatePath('/');
+        revalidateTag(`transactions-${user.id}`);
 
         return NextResponse.json(newTransaction);
     } catch (error) {
