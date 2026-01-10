@@ -69,7 +69,7 @@ export async function PATCH(
             .returning();
 
         revalidatePath('/');
-        revalidateTag(`transactions-${user.id}`);
+        revalidateTag(`transactions-${user.id}`, 'page');
 
         return NextResponse.json(updated[0]);
     } catch (error) {
@@ -109,7 +109,7 @@ export async function DELETE(
         await db.delete(transaction).where(eq(transaction.id, id));
 
         revalidatePath('/');
-        revalidateTag(`transactions-${user.id}`);
+        revalidateTag(`transactions-${user.id}`, 'page');
 
         return NextResponse.json({ success: true });
     } catch (error) {

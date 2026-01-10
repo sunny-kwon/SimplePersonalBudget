@@ -45,14 +45,14 @@ export async function PATCH(
 
         if (updated) {
             revalidatePath('/');
-            revalidateTag(`transactions-${user.id}`);
+            revalidateTag(`transactions-${user.id}`, 'page');
         }
 
         if (!updated) {
             return new NextResponse('Category not found', { status: 404 });
         }
 
-        return NextResponse.json(updated);
+        return NextResponse.json(updated, { status: 200 });
     } catch (error) {
         console.error('Error updating category:', error);
         return new NextResponse('Internal Server Error', { status: 500 });
@@ -82,14 +82,14 @@ export async function DELETE(
 
         if (deleted) {
             revalidatePath('/');
-            revalidateTag(`transactions-${user.id}`);
+            revalidateTag(`transactions-${user.id}`, 'page');
         }
 
         if (!deleted) {
             return new NextResponse('Category not found', { status: 404 });
         }
 
-        return NextResponse.json(deleted);
+        return NextResponse.json(deleted, { status: 200 });
     } catch (error) {
         console.error('Error deleting category:', error);
         return new NextResponse('Internal Server Error', { status: 500 });
