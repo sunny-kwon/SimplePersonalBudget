@@ -23,16 +23,16 @@ export function RecentTransactions({ transactions }: { transactions: Transaction
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white shadow-sm rounded-[32px] p-8 border border-gray-100"
+            className="bg-white shadow-sm rounded-[32px] p-5 sm:p-8 border border-gray-100"
         >
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                 <div>
                     <h3 className="text-xl font-black text-gray-900 tracking-tight">Recent Activity</h3>
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Latest Records</p>
                 </div>
                 <Link
                     href="/transactions"
-                    className="group inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-indigo-100 transition-all"
+                    className="group inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-xl hover:bg-indigo-100 transition-all w-full sm:w-auto justify-center"
                 >
                     View All Transactions <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Link>

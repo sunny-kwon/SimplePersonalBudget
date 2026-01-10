@@ -97,23 +97,23 @@ export function TransactionForm() {
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white shadow-xl shadow-indigo-50/50 rounded-[40px] p-10 border border-gray-100 overflow-hidden relative"
+            className="bg-white shadow-xl shadow-indigo-50/50 rounded-[32px] sm:rounded-[40px] p-6 sm:p-10 border border-gray-100 overflow-hidden relative"
         >
-            <div className="flex justify-between items-center mb-10">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-10">
                 <div>
-                    <h3 className="text-2xl font-black text-gray-900 tracking-tight">Quick Add</h3>
+                    <h3 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">Quick Add</h3>
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Manual Entry</p>
                 </div>
-                <div className="flex bg-gray-50 p-1.5 rounded-2xl gap-2">
+                <div className="flex bg-gray-50 p-1.5 rounded-2xl gap-1 sm:gap-2 w-full sm:w-auto">
                     <button
                         onClick={() => setKind('expense')}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${kind === 'expense' ? 'bg-white text-red-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                        className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all ${kind === 'expense' ? 'bg-white text-red-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
                     >
                         <ArrowDownCircle className="h-4 w-4" /> Expense
                     </button>
                     <button
                         onClick={() => setKind('income')}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${kind === 'income' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                        className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all ${kind === 'income' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
                     >
                         <ArrowUpCircle className="h-4 w-4" /> Income
                     </button>

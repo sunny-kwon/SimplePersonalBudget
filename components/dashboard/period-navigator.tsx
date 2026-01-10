@@ -38,35 +38,37 @@ export function PeriodNavigator({ startDate, endDate }: PeriodNavigatorProps) {
     const isCurrent = DateTime.now() >= start && DateTime.now() <= end;
 
     return (
-        <div className="flex items-center gap-4 bg-white p-2 rounded-2xl border border-gray-100 shadow-sm">
+        <div className="flex items-center gap-1 sm:gap-4 bg-white p-1.5 sm:p-2 rounded-2xl border border-gray-100 shadow-sm w-full sm:w-auto justify-between sm:justify-start">
             <button
                 onClick={() => navigate('prev')}
-                className="p-2 hover:bg-gray-50 rounded-xl transition-colors text-gray-500 hover:text-indigo-600"
+                className="p-1.5 sm:p-2 hover:bg-gray-50 rounded-xl transition-colors text-gray-500 hover:text-indigo-600"
             >
-                <ChevronLeft className="h-5 w-5" />
+                <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
 
-            <div className="flex flex-col items-center px-4 min-w-[200px]">
-                <div className="flex items-center gap-2 text-xs font-black text-indigo-600 uppercase tracking-widest mb-0.5">
+            <div className="flex flex-col items-center px-2 sm:px-4 min-w-0 flex-1 sm:flex-none sm:min-w-[200px]">
+                <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-black text-indigo-600 uppercase tracking-widest mb-0.5">
                     <Calendar className="h-3 w-3" />
-                    {isCurrent ? 'Current Period' : 'Planned Period'}
+                    <span className="truncate">
+                        {isCurrent ? 'Current Period' : 'Planned Period'}
+                    </span>
                 </div>
-                <div className="text-sm font-bold text-gray-900 tracking-tight">
+                <div className="text-[11px] sm:text-sm font-bold text-gray-900 tracking-tight whitespace-nowrap">
                     {start.toFormat('MMM d')} – {end.toFormat('MMM d, yyyy')}
                 </div>
             </div>
 
             <button
                 onClick={() => navigate('next')}
-                className="p-2 hover:bg-gray-50 rounded-xl transition-colors text-gray-500 hover:text-indigo-600"
+                className="p-1.5 sm:p-2 hover:bg-gray-50 rounded-xl transition-colors text-gray-500 hover:text-indigo-600"
             >
-                <ChevronRight className="h-5 w-5" />
+                <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
 
             {!isCurrent && (
                 <button
                     onClick={() => navigate('current')}
-                    className="ml-2 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
+                    className="ml-1 sm:ml-2 px-2 sm:px-3 py-1 sm:py-1.5 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors border border-indigo-100/50"
                 >
                     Today
                 </button>

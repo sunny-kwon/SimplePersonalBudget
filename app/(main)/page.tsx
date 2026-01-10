@@ -61,11 +61,11 @@ export default async function HomePage({
         <div className="space-y-12 pb-20 font-sans">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
                 <div className="space-y-1">
-                    <p className="text-xs font-black text-indigo-600 uppercase tracking-[0.3em] mb-2 flex items-center gap-2">
+                    <p className="text-[10px] sm:text-xs font-black text-indigo-600 uppercase tracking-[0.2em] sm:tracking-[0.3em] mb-2 flex items-center gap-2">
                         <Sparkles className="h-3 w-3" />
                         Live Financial Pulse
                     </p>
-                    <h1 className="text-5xl font-black text-gray-900 tracking-tighter">Your Dashboard</h1>
+                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 tracking-tighter">Your Dashboard</h1>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
