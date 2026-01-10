@@ -9,7 +9,6 @@ const DEFAULT_SECTIONS = [
     { name: 'Income', order: '0', color: '#22c55e' },
     { name: 'Giving', order: '1', color: '#ec4899' },
     { name: 'Needs', order: '2', color: '#ef4444' },
-    { name: 'Food', order: '3', color: '#f59e0b' },
     { name: 'Wants', order: '4', color: '#8b5cf6' },
     { name: 'Savings', order: '5', color: '#3b82f6' },
 ] as const;
@@ -24,17 +23,15 @@ const DEFAULT_CATEGORIES = [
 
     // Needs
     { name: 'Rent', type: 'expense' as const, sectionName: 'Needs' },
-    { name: 'Transport', type: 'expense' as const, sectionName: 'Needs' },
+    { name: 'Transportation', type: 'expense' as const, sectionName: 'Needs' },
     { name: 'Utilities', type: 'expense' as const, sectionName: 'Needs' },
     { name: 'Car Payment', type: 'expense' as const, sectionName: 'Needs' },
-
-    // Food
-    { name: 'Groceries', type: 'expense' as const, sectionName: 'Food' },
-    { name: 'Dining Out', type: 'expense' as const, sectionName: 'Food' },
+    { name: 'Groceries', type: 'expense' as const, sectionName: 'Needs' },
 
     // Wants
     { name: 'Netflix', type: 'expense' as const, sectionName: 'Wants' },
     { name: 'Spotify', type: 'expense' as const, sectionName: 'Wants' },
+    { name: 'Dining Out', type: 'expense' as const, sectionName: 'Wants' },
     { name: 'Miscellaneous', type: 'expense' as const, sectionName: 'Wants' },
 
     // Savings

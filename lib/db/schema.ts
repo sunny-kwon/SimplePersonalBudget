@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, char, numeric, date, boolean, unique, index, check, primaryKey } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, char, numeric, date, boolean, unique, index, check, primaryKey, uniqueIndex } from 'drizzle-orm/pg-core';
 import { sql, relations } from 'drizzle-orm';
 
 // Users table (mirrors auth.users)
@@ -30,7 +30,7 @@ export const sectionRelations = relations(section, ({ many }) => ({
 export const category = pgTable('category', {
     id: uuid('id').defaultRandom().primaryKey(),
     userId: uuid('user_id').notNull().references(() => userProfile.userId, { onDelete: 'cascade' }),
-    sectionId: uuid('section_id').references(() => section.id, { onDelete: 'cascade' }),
+    sectionId: uuid('section_id').references(() => section.id, { onDelete: 'set null' }),
     name: text('name').notNull(),
     type: text('type', { enum: ['expense', 'income', 'both'] }).notNull(),
     icon: text('icon'),
@@ -53,7 +53,7 @@ export const categoryRelations = relations(category, ({ one, many }) => ({
 export const transaction = pgTable('transaction', {
     id: uuid('id').defaultRandom().primaryKey(),
     userId: uuid('user_id').notNull().references(() => userProfile.userId, { onDelete: 'cascade' }),
-    categoryId: uuid('category_id').references(() => category.id, { onDelete: 'cascade' }),
+    categoryId: uuid('category_id').references(() => category.id, { onDelete: 'set null' }),
     amount: numeric('amount', { precision: 12, scale: 2 }).notNull(),
     kind: text('kind', { enum: ['expense', 'income'] }).notNull(),
     occurredOn: date('occurred_on').notNull(),
@@ -91,3 +91,45 @@ export const transactionTag = pgTable('transaction_tag', {
     pk: primaryKey({ columns: [t.transactionId, t.tagId] }),
 }));
 
+// Budget Configuration table
+export const budgetConfig = pgTable('budget_config', {
+    userId: uuid('user_id').primaryKey().notNull().references(() => userProfile.userId, { onDelete: 'cascade' }),
+    period: text('period', { enum: ['weekly', 'bi-weekly', 'monthly'] }).default('monthly').notNull(),
+    totalTarget: numeric('total_target', { precision: 12, scale: 2 }).default('0').notNull(),
+    cycleStartDate: date('cycle_start_date').default(sql`CURRENT_DATE`).notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Budget Allocation table
+export const budgetAllocation = pgTable('budget_allocation', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id').notNull().references(() => userProfile.userId, { onDelete: 'cascade' }),
+    sectionId: uuid('section_id').notNull().references(() => section.id, { onDelete: 'cascade' }),
+    categoryId: uuid('category_id').references(() => category.id, { onDelete: 'cascade' }),
+    amount: numeric('amount', { precision: 12, scale: 2 }).default('0').notNull(),
+    percentage: numeric('percentage', { precision: 5, scale: 2 }).default('0').notNull(),
+    allocationType: text('allocation_type', { enum: ['amount', 'percentage'] }).default('amount').notNull(),
+}, (t) => ({
+    userIdIdx: index('budget_alloc_user_id_idx').on(t.userId),
+    sectionIdIdx: index('budget_alloc_section_id_idx').on(t.sectionId),
+    unqSection: uniqueIndex('unq_section_budget').on(t.userId, t.sectionId).where(sql`category_id IS NULL`),
+    unqCategory: uniqueIndex('unq_category_budget').on(t.userId, t.categoryId).where(sql`category_id IS NOT NULL`),
+}));
+
+export const budgetConfigRelations = relations(budgetConfig, ({ one }) => ({
+    user: one(userProfile, {
+        fields: [budgetConfig.userId],
+        references: [userProfile.userId],
+    }),
+}));
+
+export const budgetAllocationRelations = relations(budgetAllocation, ({ one }) => ({
+    section: one(section, {
+        fields: [budgetAllocation.sectionId],
+        references: [section.id],
+    }),
+    category: one(category, {
+        fields: [budgetAllocation.categoryId],
+        references: [category.id],
+    }),
+}));

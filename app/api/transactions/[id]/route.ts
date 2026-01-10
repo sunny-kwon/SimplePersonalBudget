@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { db } from '@/lib/db';
 import { transaction } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
@@ -69,6 +69,7 @@ export async function PATCH(
             .returning();
 
         revalidatePath('/');
+        revalidateTag(`transactions-${user.id}`, 'page');
 
         return NextResponse.json(updated[0]);
     } catch (error) {
@@ -108,6 +109,7 @@ export async function DELETE(
         await db.delete(transaction).where(eq(transaction.id, id));
 
         revalidatePath('/');
+        revalidateTag(`transactions-${user.id}`, 'page');
 
         return NextResponse.json({ success: true });
     } catch (error) {

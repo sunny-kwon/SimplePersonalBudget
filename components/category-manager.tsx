@@ -191,7 +191,10 @@ export function CategoryManager() {
         if (!confirm('Delete this category?')) return;
         try {
             const res = await fetch(`/api/categories/${id}`, { method: 'DELETE' });
-            if (res.ok) fetchData();
+            if (res.ok) {
+                setEditingCategory(null);
+                fetchData();
+            }
         } catch (error) {
             console.error('Failed to delete category', error);
         }

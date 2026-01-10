@@ -7,6 +7,7 @@ interface KPICardsProps {
     totalIncome: number;
     totalExpense: number;
     net: number;
+    budgetLimit: number;
 }
 
 const container: Variants = {
@@ -32,9 +33,12 @@ const item: Variants = {
     }
 };
 
-export function KPICards({ totalIncome, totalExpense, net }: KPICardsProps) {
+export function KPICards({ totalIncome, totalExpense, net, budgetLimit }: KPICardsProps) {
     const format = (n: number) =>
         new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
+
+    const remaining = budgetLimit - totalExpense;
+    const isOverBudget = remaining < 0;
 
     return (
         <motion.div
@@ -69,16 +73,16 @@ export function KPICards({ totalIncome, totalExpense, net }: KPICardsProps) {
                 </div>
             </motion.div>
 
-            {/* Net */}
+            {/* Remaining Budget */}
             <motion.div variants={item} className="bg-white overflow-hidden shadow-sm rounded-3xl border border-gray-100 p-6 group hover:shadow-md transition-shadow">
                 <div className="flex items-center gap-5">
-                    <div className={`flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform ${net >= 0 ? 'bg-indigo-50' : 'bg-orange-50'}`}>
-                        <Wallet className={`h-6 w-6 ${net >= 0 ? 'text-indigo-600' : 'text-orange-600'}`} />
+                    <div className={`flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform ${!isOverBudget ? 'bg-indigo-50' : 'bg-orange-50'}`}>
+                        <Wallet className={`h-6 w-6 ${!isOverBudget ? 'text-indigo-600' : 'text-orange-600'}`} />
                     </div>
                     <div>
-                        <dt className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Net Balance</dt>
-                        <dd className={`text-2xl font-black mt-0.5 ${net >= 0 ? 'text-gray-900' : 'text-orange-600'}`}>
-                            {format(net)}
+                        <dt className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Remaining Budget</dt>
+                        <dd className={`text-2xl font-black mt-0.5 ${!isOverBudget ? 'text-gray-900' : 'text-orange-600'}`}>
+                            {format(remaining)}
                         </dd>
                     </div>
                 </div>

@@ -6,11 +6,21 @@ import { RecentTransactions } from '@/components/recent-transactions';
 import { KPICards } from '@/components/dashboard/kpi-cards';
 import { SpendingChart } from '@/components/dashboard/spending-chart';
 import { TrendChart } from '@/components/dashboard/trend-chart';
-import { ArrowRight, Wallet, Target, Sparkles } from 'lucide-react';
+import { BudgetProgress } from '@/components/dashboard/budget-progress';
+import { ArrowRight, Wallet, Target, Sparkles, Calendar } from 'lucide-react';
 import { getDashboardStats } from '@/lib/analytics';
 import { LandingHero } from '@/components/landing-hero';
+import { PeriodNavigator } from '@/components/dashboard/period-navigator';
 
-export default async function HomePage() {
+export default async function HomePage({
+    searchParams,
+}: {
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+    const params = await searchParams;
+    const dateParam = typeof params.date === 'string' ? params.date : undefined;
+    const targetDate = dateParam ? new Date(dateParam) : new Date();
+
     const cookieStore = await cookies();
     const supabase = await createClient(cookieStore);
     const { data: { user } } = await supabase.auth.getUser();
@@ -24,7 +34,7 @@ export default async function HomePage() {
     let error: string | null = null;
 
     try {
-        stats = await getDashboardStats(user.id);
+        stats = await getDashboardStats(user.id, targetDate);
     } catch (e) {
         console.error("Dashboard stats error:", e);
         error = "Internal connection error. Please refresh.";
@@ -49,25 +59,31 @@ export default async function HomePage() {
 
     return (
         <div className="space-y-12 pb-20 font-sans">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-                <div>
-                    <p className="text-xs font-black text-indigo-600 uppercase tracking-[0.3em] mb-3">
-                        Daily Financial Overview
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
+                <div className="space-y-1">
+                    <p className="text-xs font-black text-indigo-600 uppercase tracking-[0.3em] mb-2 flex items-center gap-2">
+                        <Sparkles className="h-3 w-3" />
+                        Live Financial Pulse
                     </p>
                     <h1 className="text-5xl font-black text-gray-900 tracking-tighter">Your Dashboard</h1>
                 </div>
-                <Link
-                    href="/categories"
-                    className="inline-flex items-center gap-2 px-8 py-4 bg-white border border-gray-100 shadow-sm text-sm font-black rounded-2xl text-gray-700 hover:shadow-md transition-all active:scale-95"
-                >
-                    Manage Categories <ArrowRight className="h-4 w-4" />
-                </Link>
+
+                <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
+                    <PeriodNavigator startDate={stats.startDate} endDate={stats.endDate} />
+                    <Link
+                        href="/categories"
+                        className="hidden sm:inline-flex items-center gap-2 px-8 py-4 bg-white border border-gray-100 shadow-sm text-sm font-black rounded-2xl text-gray-700 hover:shadow-md transition-all active:scale-95"
+                    >
+                        Management <ArrowRight className="h-4 w-4" />
+                    </Link>
+                </div>
             </div>
 
             <KPICards
                 totalIncome={stats.totalIncome}
                 totalExpense={stats.totalExpense}
                 net={stats.net}
+                budgetLimit={stats.budget?.totalTarget || 0}
             />
 
             <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 items-start">
@@ -77,6 +93,9 @@ export default async function HomePage() {
                 </div>
 
                 <div className="space-y-12">
+                    {stats.budget && (
+                        <BudgetProgress budget={stats.budget} sections={stats.sections} />
+                    )}
                     <SpendingChart data={stats.spendingBySection} />
                     <TrendChart data={stats.dailyTrend} sections={stats.sections} />
                 </div>

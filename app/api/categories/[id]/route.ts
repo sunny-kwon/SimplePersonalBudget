@@ -4,6 +4,7 @@ import { category } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import { revalidateTag, revalidatePath } from 'next/cache';
 
 export async function PATCH(
     request: Request,
@@ -42,11 +43,16 @@ export async function PATCH(
             .where(and(eq(category.id, categoryId), eq(category.userId, user.id)))
             .returning();
 
+        if (updated) {
+            revalidatePath('/');
+            revalidateTag(`transactions-${user.id}`, 'page');
+        }
+
         if (!updated) {
             return new NextResponse('Category not found', { status: 404 });
         }
 
-        return NextResponse.json(updated);
+        return NextResponse.json(updated, { status: 200 });
     } catch (error) {
         console.error('Error updating category:', error);
         return new NextResponse('Internal Server Error', { status: 500 });
@@ -74,11 +80,16 @@ export async function DELETE(
             .where(and(eq(category.id, categoryId), eq(category.userId, user.id)))
             .returning();
 
+        if (deleted) {
+            revalidatePath('/');
+            revalidateTag(`transactions-${user.id}`, 'page');
+        }
+
         if (!deleted) {
             return new NextResponse('Category not found', { status: 404 });
         }
 
-        return NextResponse.json(deleted);
+        return NextResponse.json(deleted, { status: 200 });
     } catch (error) {
         console.error('Error deleting category:', error);
         return new NextResponse('Internal Server Error', { status: 500 });
