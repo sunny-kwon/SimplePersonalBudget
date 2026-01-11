@@ -26,7 +26,7 @@ export function BudgetProgress({ budget, sections }: BudgetProgressProps) {
     const incomeProgress = budget.totalTarget > 0 ? (budget.realized / budget.totalTarget) * 100 : 0;
 
     return (
-        <div className="bg-white p-5 sm:p-8 rounded-[32px] border border-gray-100 shadow-sm space-y-8">
+        <div className="bg-white p-5 sm:p-8 rounded-[32px] border border-gray-100 shadow-sm space-y-8 min-h-[350px]">
             <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
                     <div className="p-3 bg-indigo-50 rounded-2xl">

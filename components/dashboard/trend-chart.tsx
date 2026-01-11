@@ -60,10 +60,11 @@ export function TrendChart({ data, sections }: TrendChartProps) {
 
     return (
         <motion.div
+            id="dashboard-pulse-chart"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
-            className="bg-white shadow-sm rounded-3xl p-8 border border-gray-100"
+            className="bg-white shadow-sm rounded-3xl p-8 border border-gray-100 min-h-[440px]"
         >
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                 <div>

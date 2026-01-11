@@ -3,6 +3,9 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { CategoryManager } from '@/components/category-manager';
 import { Settings2 } from 'lucide-react';
+import { db } from '@/lib/db';
+import { userProfile } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
 
 export default async function CategoriesPage() {
     const cookieStore = await cookies();
@@ -12,6 +15,10 @@ export default async function CategoriesPage() {
     if (!user) {
         redirect('/login');
     }
+
+    const profile = await db.query.userProfile.findFirst({
+        where: eq(userProfile.userId, user.id)
+    });
 
     return (
         <div className="space-y-8">
@@ -25,7 +32,7 @@ export default async function CategoriesPage() {
                 </div>
             </div>
 
-            <CategoryManager />
+            <CategoryManager onboardingCompleted={!!profile?.onboardingCompleted} />
         </div>
     );
 }

@@ -23,7 +23,7 @@ export function RecentTransactions({ transactions }: { transactions: Transaction
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white shadow-sm rounded-[32px] p-5 sm:p-8 border border-gray-100"
+            className="bg-white shadow-sm rounded-[32px] p-5 sm:p-8 border border-gray-100 min-h-[400px]"
         >
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                 <div>

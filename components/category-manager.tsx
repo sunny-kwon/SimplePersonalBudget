@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Trash2, X, Pencil, MoreVertical, ChevronUp, ChevronDown } from 'lucide-react';
 import { ColorPicker } from './color-picker';
 
+
 type Category = {
     id: string;
     name: string;
@@ -19,13 +20,14 @@ type Section = {
     categories: Category[];
 };
 
-export function CategoryManager() {
+export function CategoryManager({ onboardingCompleted }: { onboardingCompleted: boolean }) {
     const [sections, setSections] = useState<Section[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'expense' | 'income'>('expense');
 
     // Section State
     const [isAddingSection, setIsAddingSection] = useState(false);
+
     const [editingSection, setEditingSection] = useState<Section | null>(null);
     const [sectionName, setSectionName] = useState('');
     const [sectionColor, setSectionColor] = useState('#6366f1');
@@ -211,6 +213,7 @@ export function CategoryManager() {
                         <p className="text-sm text-gray-500">Manage sections and categories</p>
                     </div>
                     <button
+                        id="category-add-btn"
                         onClick={() => {
                             setIsAddingSection(true);
                             setSectionName('');
@@ -223,7 +226,7 @@ export function CategoryManager() {
                     </button>
                 </div>
 
-                <div className="flex p-1 bg-gray-100 rounded-lg w-full max-w-sm">
+                <div id="category-tabs" className="flex p-1 bg-gray-100 rounded-lg w-full max-w-sm">
                     <button
                         onClick={() => setActiveTab('expense')}
                         className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${activeTab === 'expense' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}

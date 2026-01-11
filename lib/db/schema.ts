@@ -8,6 +8,7 @@ export const userProfile = pgTable('user_profile', {
     displayName: text('display_name'),
     currency: char('currency', { length: 3 }).default('USD').notNull(),
     dateFormat: text('date_format').default('MM/DD/YYYY').notNull(),
+    onboardingCompleted: boolean('onboarding_completed').default(false).notNull(),
 });
 
 // Sections table
