@@ -56,7 +56,7 @@ export function SpendingChart({ data }: SpendingChartProps) {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            className="bg-white shadow-sm rounded-3xl p-8 border border-gray-100 hover:shadow-md transition-shadow"
+            className="bg-white shadow-sm rounded-3xl p-8 border border-gray-100 hover:shadow-md transition-shadow min-h-[500px]"
         >
             <div className="flex justify-between items-center mb-6">
                 <div>

@@ -11,6 +11,10 @@ import { ArrowRight, Wallet, Target, Sparkles, Calendar } from 'lucide-react';
 import { getDashboardStats } from '@/lib/analytics';
 import { LandingHero } from '@/components/landing-hero';
 import { PeriodNavigator } from '@/components/dashboard/period-navigator';
+import { db } from '@/lib/db';
+import { userProfile } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
+import { DashboardTourHandler } from '@/components/dashboard/tour-handler';
 
 export default async function HomePage({
     searchParams,
@@ -57,8 +61,13 @@ export default async function HomePage({
 
     if (!stats) return null;
 
+    const profile = await db.query.userProfile.findFirst({
+        where: eq(userProfile.userId, user.id)
+    });
+
     return (
         <div className="space-y-12 pb-20 font-sans">
+            <DashboardTourHandler onboardingCompleted={!!profile?.onboardingCompleted} />
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
                 <div className="space-y-1">
                     <p className="text-[10px] sm:text-xs font-black text-indigo-600 uppercase tracking-[0.2em] sm:tracking-[0.3em] mb-2 flex items-center gap-2">
