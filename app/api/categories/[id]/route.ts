@@ -45,7 +45,7 @@ export async function PATCH(
 
         if (updated) {
             revalidatePath('/');
-            revalidateTag(`transactions-${user.id}`, 'page');
+            revalidateTag(`transactions-${user.id}`);
         }
 
         if (!updated) {
@@ -82,7 +82,7 @@ export async function DELETE(
 
         if (deleted) {
             revalidatePath('/');
-            revalidateTag(`transactions-${user.id}`, 'page');
+            revalidateTag(`transactions-${user.id}`);
         }
 
         if (!deleted) {

@@ -79,7 +79,7 @@ export async function updateBudgetConfig(data: {
 
     revalidatePath('/budget');
     revalidatePath('/');
-    revalidateTag(`budget-${user.id}`, 'page');
+    revalidateTag(`budget-${user.id}`);
 }
 
 // Improved updateAllocation that uses simpler logic to avoid Drizzle's onConflict limitations with partial indexes.
@@ -135,7 +135,7 @@ export async function saveAllocation(data: {
 
     revalidatePath('/budget');
     revalidatePath('/');
-    revalidateTag(`budget-${user.id}`, 'page');
+    revalidateTag(`budget-${user.id}`);
 }
 export async function deleteAllocation(sectionId: string, categoryId: string | null) {
     const cookieStore = await cookies();
@@ -155,5 +155,5 @@ export async function deleteAllocation(sectionId: string, categoryId: string | n
 
     revalidatePath('/budget');
     revalidatePath('/');
-    revalidateTag(`budget-${user.id}`, 'page');
+    revalidateTag(`budget-${user.id}`);
 }

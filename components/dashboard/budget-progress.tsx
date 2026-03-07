@@ -11,6 +11,12 @@ interface BudgetProgressProps {
             sectionId: string;
             planned: number;
             actual: number;
+            categories: {
+                categoryId: string;
+                name: string;
+                actual: number;
+                planned: number;
+            }[];
         }[];
     };
     sections: {
@@ -84,7 +90,7 @@ export function BudgetProgress({ budget, sections }: BudgetProgressProps) {
             </div>
 
             {/* Section Breakdown */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8 pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 pt-4">
                 {budget.sections.map((bs) => {
                     const section = sections.find(s => s.id === bs.sectionId);
                     if (!section) return null;
@@ -125,13 +131,33 @@ export function BudgetProgress({ budget, sections }: BudgetProgressProps) {
                                     <div className="absolute inset-0 bg-red-500/10 animate-pulse pointer-events-none" />
                                 )}
                             </div>
+
+                            {/* Category Breakdown */}
+                            <div className="space-y-1.5 px-1">
+                                {bs.categories.map(cat => (
+                                    <div key={cat.categoryId} className="flex justify-between items-center text-[11px]">
+                                        <span className="font-medium text-gray-500">{cat.name}</span>
+                                        <div className="text-right">
+                                            <span className="font-black text-gray-700">
+                                                ${cat.actual.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                            </span>
+                                            {cat.planned > 0 && (
+                                                <span className="text-[9px] font-bold text-gray-300 uppercase ml-1">
+                                                    / ${cat.planned.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
                             {isOver ? (
-                                <div className="flex items-center gap-1.5 text-[10px] font-black text-red-500 uppercase tracking-tight">
+                                <div className="flex items-center gap-1.5 text-[10px] font-black text-red-500 uppercase tracking-tight mt-1">
                                     <AlertCircle className="h-3.5 w-3.5" />
                                     <span>{((bs.actual / bs.planned - 1) * 100).toFixed(0)}% Over Budget</span>
                                 </div>
                             ) : (
-                                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">
+                                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-tight mt-1">
                                     {progress.toFixed(0)}% Utilized
                                 </div>
                             )}

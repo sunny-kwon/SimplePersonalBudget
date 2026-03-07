@@ -53,6 +53,12 @@ export interface DashboardStats {
             sectionId: string;
             planned: number;
             actual: number;
+            categories: {
+                categoryId: string;
+                name: string;
+                actual: number;
+                planned: number;
+            }[];
         }[];
     } | null;
     transactions: TransactionWithCategory[];
@@ -126,15 +132,14 @@ export async function getDashboardStats(userId: string, targetDate: Date = new D
                 orderBy: [desc(transaction.occurredOn), desc(transaction.createdAt)]
             }) as TransactionWithCategory[];
 
-            // 3. Fetch budget allocations
-            const bAllocationsRaw = await db.select().from(budgetAllocation).where(and(
-                eq(budgetAllocation.userId, userId),
-                isNull(budgetAllocation.categoryId)
-            ));
+            // 3. Fetch all budget allocations (both section and category levels)
+            const bAllocationsRaw = await db.select().from(budgetAllocation).where(eq(budgetAllocation.userId, userId));
 
             const allSectionsData = await db.query.section.findMany({
                 where: eq(section.userId, userId),
-                with: { categories: true }
+                with: {
+                    categories: true
+                }
             });
 
             const expenseSectionIds = new Set(
@@ -142,12 +147,15 @@ export async function getDashboardStats(userId: string, targetDate: Date = new D
                     .filter(s => s.categories.length === 0 || s.categories.some(c => c.type === 'expense' || c.type === 'both'))
                     .map(s => s.id)
             );
+
+            // Filter raw allocations to only those belonging to expense sections
             const bAllocations = bAllocationsRaw.filter(a => expenseSectionIds.has(a.sectionId));
 
             // Aggregates
             let totalIncome = 0;
             let totalExpense = 0;
             const sectionMap = new Map<string, { name: string; color: string; amount: number }>();
+            const categoryMap = new Map<string, { name: string; amount: number; sectionId: string }>();
             const dailyMap = new Map<string, { income: number; expense: number }>();
 
             // Pre-fill daily map for the period
@@ -169,7 +177,9 @@ export async function getDashboardStats(userId: string, targetDate: Date = new D
                     dayStats.expense += amt;
 
                     const s = t.category?.section;
+                    const c = t.category;
                     const secId = s?.id || 'unassigned';
+
                     if (!sectionMap.has(secId)) {
                         sectionMap.set(secId, {
                             name: s?.name || 'Uncategorized',
@@ -178,6 +188,18 @@ export async function getDashboardStats(userId: string, targetDate: Date = new D
                         });
                     }
                     sectionMap.get(secId)!.amount += amt;
+
+                    if (c) {
+                        const catId = c.id;
+                        if (!categoryMap.has(catId)) {
+                            categoryMap.set(catId, {
+                                name: c.name,
+                                amount: 0,
+                                sectionId: secId
+                            });
+                        }
+                        categoryMap.get(catId)!.amount += amt;
+                    }
                 }
 
                 if (dailyMap.has(t.occurredOn)) {
@@ -225,6 +247,15 @@ export async function getDashboardStats(userId: string, targetDate: Date = new D
                 return row;
             }).sort((a, b) => (a.date as string).localeCompare(b.date as string));
 
+            // Helper to calculate planned amount from allocation
+            const calculatePlanned = (a: { allocationType: string; percentage: string; amount: string }, totalTarget: number) => {
+                return a.allocationType === 'percentage'
+                    ? (totalTarget * parseFloat(a.percentage) / 100)
+                    : parseFloat(a.amount);
+            };
+
+            const totalTarget = bConfig ? parseFloat(bConfig.totalTarget) : 0;
+
             return {
                 totalIncome,
                 totalExpense,
@@ -236,21 +267,53 @@ export async function getDashboardStats(userId: string, targetDate: Date = new D
                 sections: allSections,
                 transactions: txs,
                 budget: bConfig ? {
-                    totalTarget: parseFloat(bConfig.totalTarget),
+                    totalTarget: totalTarget,
                     realized: totalIncome,
-                    planned: bAllocations.reduce((sum: number, a: { allocationType: string; percentage: string; amount: string }) => {
-                        const val = a.allocationType === 'percentage'
-                            ? (parseFloat(bConfig.totalTarget) * parseFloat(a.percentage) / 100)
-                            : parseFloat(a.amount);
-                        return sum + val;
-                    }, 0),
-                    sections: bAllocations.map((a: { sectionId: string; allocationType: string; percentage: string; amount: string }) => ({
-                        sectionId: a.sectionId,
-                        planned: a.allocationType === 'percentage'
-                            ? (parseFloat(bConfig.totalTarget) * parseFloat(a.percentage) / 100)
-                            : parseFloat(a.amount),
-                        actual: sectionMap.get(a.sectionId)?.amount || 0
-                    }))
+                    planned: bAllocations
+                        .filter(a => a.categoryId === null) // Section totals are based on section-level allocations
+                        .reduce((sum, a) => sum + calculatePlanned(a, totalTarget), 0),
+                    sections: bAllocations
+                        .filter(a => a.categoryId === null)
+                        .map(a => {
+                            // Find all categories for this section that have either a budget or spending
+                            const sectionCategories = new Map<string, { name: string; actual: number; planned: number }>();
+
+                            // 1. Add categories with budget allocations
+                            bAllocations
+                                .filter(ba => ba.sectionId === a.sectionId && ba.categoryId !== null)
+                                .forEach(ba => {
+                                    const catId = ba.categoryId!;
+                                    const catName = allSectionsData.find(s => s.id === a.sectionId)?.categories.find(c => c.id === catId)?.name || 'Unknown';
+                                    sectionCategories.set(catId, {
+                                        name: catName,
+                                        actual: 0,
+                                        planned: calculatePlanned(ba, totalTarget)
+                                    });
+                                });
+
+                            // 2. Aggregate actual spending (updating existing or adding new)
+                            for (const [catId, data] of categoryMap.entries()) {
+                                if (data.sectionId === a.sectionId) {
+                                    const existing = sectionCategories.get(catId) || { name: data.name, actual: 0, planned: 0 };
+                                    existing.actual = data.amount;
+                                    sectionCategories.set(catId, existing);
+                                }
+                            }
+
+                            return {
+                                sectionId: a.sectionId,
+                                planned: calculatePlanned(a, totalTarget),
+                                actual: sectionMap.get(a.sectionId)?.amount || 0,
+                                categories: Array.from(sectionCategories.entries())
+                                    .map(([id, data]) => ({
+                                        categoryId: id,
+                                        name: data.name,
+                                        actual: data.actual,
+                                        planned: data.planned
+                                    }))
+                                    .sort((a, b) => b.actual - a.actual)
+                            };
+                        })
                 } : null
             };
         },

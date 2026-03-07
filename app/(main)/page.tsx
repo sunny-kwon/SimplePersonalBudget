@@ -106,7 +106,7 @@ export default async function HomePage({
                         <BudgetProgress budget={stats.budget} sections={stats.sections} />
                     )}
                     <SpendingChart data={stats.spendingBySection} />
-                    <TrendChart data={stats.dailyTrend} sections={stats.sections} />
+                    {/* <TrendChart data={stats.dailyTrend} sections={stats.sections} /> */}
                 </div>
             </div>
         </div>
